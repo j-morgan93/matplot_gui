@@ -107,10 +107,9 @@ class Widgettown(QWidget):
         datafile, __ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
         if datafile:
             datafile = str(datafile)
-            spectrum =np.genfromtxt(datafile,dtype=float,skip_header=2,names=['wavelength','sp.radiance','radiance'],unpack=True)
+            spectrum =np.genfromtxt(datafile,dtype=float,comments = "(",skip_header=1,names=True,unpack=True)
             sax = self.figure.add_subplot(111)
-            sax.hold(False)
-            sax.plot(spectrum['wavelength'], spectrum['radiance'], '*-')
+            sax.plot(spectrum[spectrum.dtype.names[1]], spectrum[spectrum.dtype.names[2]], '*-')
             self.canvas.draw()
     def zoom(self):
         self.toolbar.zoom()
