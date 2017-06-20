@@ -1,8 +1,9 @@
 """
-Trying to plot with Matplot and Qt5 bacckend
+Trying to plot with Matplot and Qt5 backend
 """
 import sys
 from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QAction, qApp, QApplication, QMainWindow, QWidget, QInputDialog, QLineEdit, QFileDialog
 
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -20,19 +21,13 @@ class Window(QtWidgets.QDialog):
 
 
         self.toolbar = NavigationToolbar(self.canvas, self)
+        #self.openFileNameDialog()
+        #self.openFileNamesDialog()
+        #self.saveFileDialog()
         self.toolbar.show()
 
         #defining the exitting,saving and opening of files
 
-
-        #exitAction = QAction(QIcon('exit.png'), '&Exit', self)
-        #exitAction.setShortcut('Ctrl+Q')
-        #exitAction.setStatusTip('Exit application')
-        #exitAction.triggered.connect(qApp.quit)
-
-        #menubar = self.menuBar()
-        #fileMenu = menubar.addMenu('&File')
-        #fileMenu.addAction(exitAction)
 
         #some button with listed activity
         self.button = QtWidgets.QPushButton('Plot')
@@ -57,7 +52,29 @@ class Window(QtWidgets.QDialog):
         layout.addWidget(self.button2)
         layout.addWidget(self.button3)
         self.setLayout(layout)
-
+        #####################################################
+    def openFileNameDialog(self):    
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","All Files (*);;Python Files (*.py)", options=options)
+        if fileName:
+            print(fileName)
+ 
+    def openFileNamesDialog(self):    
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        files, _ = QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileNames()", "","All Files (*);;Python Files (*.py)", options=options)
+        if files:
+            print(files)
+ 
+    def saveFileDialog(self):    
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getSaveFileName(self,"QFileDialog.getSaveFileName()","","All Files (*);;Text Files (*.txt)", options=options)
+        if fileName:
+            print(fileName)
+        
+        
     def home(self):
         self.toolbar.home()
     def zoom(self):
@@ -72,6 +89,7 @@ class Window(QtWidgets.QDialog):
         ax.hold(False)
         ax.plot(data, '*-')
         self.canvas.draw()
+        
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
