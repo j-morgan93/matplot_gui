@@ -1,0 +1,47 @@
+********************************************************************************
+                    LOS file for EAST MWIR CO2 Test Case
+
+       An unlimited number of comment lines can go here.
+
+       Enter Data AFTER the data-format lines!
+
+   (1) Enter species in any order; limited to atoms, diatomics, triatomics,
+       atomic ions, diatiomic ions, and electrons. Left-justify the species
+       symbols in the fields.  Dimensioned up to 25 species.  End entry
+       with a blank line.
+
+   (2) Properties entered at each grid point along line-of-sight.  The
+       properties apply to the layer between the grid point and the
+       previous grid point.  Thus, the properties at the first grid point
+       are not used.  This grid point only establishes the origin of the
+       line-of-sight.
+
+   (3) Enter species number densities [cm-3] in the same order that the species
+       symbols are entered.  End data entry at each grid point with a blank
+       line.
+
+   (4) End line-of-sight data entry, with a line of 0's as shown.
+
+********************************************************************************
+         aaaaaaaa       aaaaaaaa       aaaaaaaa       aaaaaaaa    (2x,(7x,a8))
+         CO2            CO             N2             O2       :Species Symbols.
+         NO             N              O
+
+--------------------------------------------------------------------------------
+   no.   x,cm   total partcc       t        tr        tv        te  (i5,f8.3,
+iiiii rrrrrrr rrrrrrrrrrrrrr rrrrrrrrr rrrrrrrrr rrrrrrrrr rrrrrrrrre15.6,4f10.1
+       rrrrrrrrrrrrrr rrrrrrrrrrrrrr rrrrrrrrrrrrrr rrrrrrrrrrrrr   (6x,4e15.6)
+       Include these 9 lines (from --- to --- lines) for first grid point only!!
+       End each grid point entry with a blank line.
+       End data file with a line of zero's as shown on the next line.
+    0     0.0            0.0       0.0       0.0       0.0       0.0
+--------------------------------------------------------------------------------
+    1  0.0000000E+00  8.0266E+17    2978.84   2978.84   2978.84   2978.84
+        2.5214000E+17  3.3091000E+17  2.1256000E+16  1.3256000E+17
+        6.0713000E+15  2.7567000E+12  5.9713000E+16
+
+    2  1.0160000E+01  8.0266E+17    2978.84   2978.84   2978.84   2978.84
+        2.5214000E+17  3.3091000E+17  2.1256000E+16  1.3256000E+17
+        6.0713000E+15  2.7567000E+12  5.9713000E+16
+
+    1     0.0            0.0       0.0       0.0       0.0       0.0
