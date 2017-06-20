@@ -16,55 +16,48 @@ class Window(QMainWindow):
     def __init__(self):
         super(Window, self).__init__()
         self.initUI()
-
-
+        
     def initUI(self):               
         #defining the exitting,saving and opening of files
         exitAction = QAction('&Exit', self)
         exitAction.setShortcut('Ctrl+Q')                        
         exitAction.setStatusTip('Exit/Terminate application')   
-        exitAction.triggered.connect(self.close)           
-        #openAction = QAction('&Exit', self)
-        #openAction.setShortcut('Ctrl+Q')                        
-        #openAction.setStatusTip('Exit/Terminate application')   
-        #openAction.triggered.connect(self.close)  
+        exitAction.triggered.connect(self.close)     
+        openAction = QAction('&Open', self)
+        openAction.setShortcut('Ctrl+O')                        
+        openAction.setStatusTip('Open File')   
+        openAction.triggered.connect(self.openFileNameDialog)
+        saveAction = QAction('&Save', self)
+        saveAction.setShortcut('Ctrl+S')                        
+        saveAction.setStatusTip('Save File')   
+        saveAction.triggered.connect(self.saveFileDialog)
         self.statusBar()                                       
 
         menubar = self.menuBar()                                
-        menubar.setToolTip('This is a <b>QWidget</b> for MenuBar')                                
+        menubar.setToolTip('This is a <b>QWidget</b> for MenuBar')               
 
         fileMenu = menubar.addMenu('&File')                     
-        fileMenu.addAction(exitAction)                          
-        toolbar = self.addToolBar('Exit')                       
+        fileMenu.addAction(exitAction)
+        fileMenu.addAction(openAction)
+        fileMenu.addAction(saveAction)
+        toolbar = self.addToolBar('Exit')
+        #toolbar = self.addToolBar('Open')
+        #toolbar = self.addToolBar('Save')                       
         toolbar.addAction(exitAction)
+        toolbar.addAction(openAction)
+        toolbar.addAction(saveAction)
         content = Widgettown(self)
-       # self.openFileNameDialog()
-       # self.openFileNamesDialog()
-       # self.saveFileDialog()
         self.setCentralWidget(content)
 
         self.show()
-   
- #   def openFileNameDialog(self):    
- #       options = QFileDialog.Options()
- #       options |= QFileDialog.DontUseNativeDialog
- #       fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()","","All Files (*);;Python Files (*.py)", options=options)
- #   if fileName:
- #       print(fileName)
+    def openFileNameDialog(self):
+        name = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
+        file = open(name,'r')
  
- #   def openFileNamesDialog(self):    
- #       options = QFileDialog.Options()
- #       options |= QFileDialog.DontUseNativeDialog
- #       files, _ = QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileNames()","","All Files (*);;Python Files (*.py)", options=options)
- #   if files:
- #       print(files)
- 
- #   def saveFileDialog(self):    
- #       options = QFileDialog.Options()
- #       options |= QFileDialog.DontUseNativeDialog
- #       fileName, _ = QFileDialog.getSaveFileName(self,"QFileDialog.getSaveFileName()","","All Files (*);;Text Files (*.txt)", options=options)
- #   if fileName:
- #       print(fileName)
+    def saveFileDialog(self):    
+        name = QFileDialog.getSaveFileName(self,"Save File","","All Files (*);;Text Files (*.txt)")
+        file = save(name,'r')
+
         
 class Widgettown(QWidget):
     def __init__(self, parent):
@@ -125,7 +118,7 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
 
     main = Window()
-    main.setWindowTitle('Basic1')
+    main.setWindowTitle('NeQtPy')
     main.show()
 
     sys.exit(app.exec_())
