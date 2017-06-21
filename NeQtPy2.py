@@ -41,8 +41,8 @@ class Window(QMainWindow):
         toolbar.addAction(exitAction)
         toolbar.addAction(openAction)
         toolbar.addAction(saveAction)
-        content = Widgettown(self)
-        self.setCentralWidget(content)
+        self.content = Widgettown(self)
+        self.setCentralWidget(self.content)
         self.show()
         
     def openFileNameDialog(self):
@@ -52,26 +52,22 @@ class Window(QMainWindow):
  
     def saveFileDialog(self):    
         name = QFileDialog.getSaveFileName(self,"Save File","","All Files (*);;Text Files (*.txt)")
-        f = open(filename, 'w')
-        filedata = self.Stack2.toPlainText()
+        f = open(name[0], 'w')
+        filedata = self.content.linedit[1].toPlainText()
         filedata = str(filedata)+"\n"
         f.write(filedata)
-        filedata = self.textEdit2.toPlainText()
-        filedata = str(filedata)+"\n"
-        f.write(filedata)
-        filedata = self.textEdit3.toPlainText()
-        filedata = str(filedata)+"\n"
-        f.write(filedata)
-        f.close()   
+        f.close()
         
         
 class Widgettown(QWidget):
     def __init__(self, parent):
         QWidget.__init__(self, parent)
+        self.speclist = None
+
         self.leftlist = QListWidget ()
         self.leftlist.insertItem (0, 'Plots' )
-        self.leftlist.insertItem (1, 'LOS Inputs' )
-        self.leftlist.insertItem (2, 'NEQAIR Inputs' )
+        self.leftlist.insertItem (1, 'Spectral Fit - Generate LOS file' )
+        self.leftlist.insertItem (2, 'NEQAIR Simulation - Provide LOS and Write .inp' )
         
         self.stack1 = QWidget()
         self.stack2 = QWidget()
@@ -99,7 +95,7 @@ class Widgettown(QWidget):
     def openFileNameDialog(self):
         name, _ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
         
-    def stack1UI(self):
+    def stack1UI(self): #THE PLOTTING CAPABILITY
         
         #figure painting from matplot
         self.figure = plt.figure()
@@ -108,7 +104,6 @@ class Widgettown(QWidget):
         #toolbar addition
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.toolbar.show()
-
 
         #some buttons for functionality
         self.button = QtWidgets.QPushButton('ReadPlot')
@@ -123,23 +118,9 @@ class Widgettown(QWidget):
         layout.addWidget(self.button2)
         self.stack1.setLayout(layout)
 
-    def readplot(self):
-        self.figure.clf()
-
-        datafile, __ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
-        if datafile:
-            datafile = str(datafile)
-            spectrum =np.genfromtxt(datafile,dtype=float,comments = "(",skip_header=1,names=True,unpack=True)
-            sax = self.figure.add_subplot(111)
-            sax.plot(spectrum[spectrum.dtype.names[1]], spectrum[spectrum.dtype.names[2]], '*-')
-            self.canvas.draw()
-           
-    def clearplot(self):
-        self.figure.clf()
-        self.canvas.draw()
         
-    def stack2UI(self):
-        speclist = ["CO","CO2","N","N2","NO","O","O2"]
+    def stack2UI(self): #THE LOS DATA CAPABILITY
+        self.speclist = ['N2', 'O2', 'NO', 'NO_1', 'N2_1', 'O2_1', 'N', 'O', 'N_1', 'O_1', 'E']
         layout = QGridLayout()
         layout.setColumnStretch(1,6)
         layout.setColumnStretch(2,6)
@@ -153,21 +134,62 @@ class Widgettown(QWidget):
         layout.addWidget(QCheckBox(),4,4)
         layout.addWidget(QLabel("T-Temp Model"),4,3)
         #number densities
-        for i in range(len(speclist)):
-            layout.addWidget(QLineEdit(),i,1)
-            layout.addWidget(QLabel(speclist[i]),i,0,QtCore.Qt.AlignRight)
+        linedits = {}
+        if self.speclist:
+            for i in range(len(self.speclist)):
+                self.mylinedit = QtWidgets.QLineEdit("0.0")
+                linedits[i] = self.mylinedit
+                layout.addWidget(linedits[i],i,1)
+                layout.addWidget(QLabel(self.speclist[i]),i,0,QtCore.Qt.AlignRight)
 
         self.stack2.setLayout(layout)
         
-    def stack3UI(self):
-        layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(QLabel("Bands maybe"))
-        layout.addWidget(QCheckBox("b-f"))
-        layout.addWidget(QCheckBox("f-f"))
+    def stack3UI(self): #THE NEQAIR MODEL CAPABILITY
+        layout = QGridLayout()
+        layout.addWidget(QLabel("Bands maybe"),1,1)
+        layout.addWidget(QCheckBox("b-f"),1,2)
+        layout.addWidget(QCheckBox("f-f"),1,3)
+        self.losopen = QtWidgets.QPushButton('Read LOS')
+        layout.addWidget(self.losopen,0,0)
+        if self.losopen.clicked.connect(self.ReadLOS):
+            linedits = {}
+            for i in range(len(self.speclist)):
+                self.mylinedit = QtWidgets.QLineEdit("0.0")
+                linedits[i] = self.mylinedit
+                layout.addWidget(linedits[i],i,1)
+                layout.addWidget(QLabel(self.speclist[i]),i,0,QtCore.Qt.AlignRight)
+                self.stack3.setLayout(layout)
+
         self.stack3.setLayout(layout)
+        
+    def readplot(self): #OPENING AND READING FIGURE IN
+        self.figure.clf()
+
+        datafile, __ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
+        if datafile:
+            datafile = str(datafile)
+            spectrum =np.genfromtxt(datafile,dtype=float,comments = "(",skip_header=1,names=True,unpack=True)
+            sax = self.figure.add_subplot(111)
+            sax.plot(spectrum[spectrum.dtype.names[1]], spectrum[spectrum.dtype.names[2]], '*-')
+            self.canvas.draw()
+                  
+    
+    def ReadLOS(self): #OPENING LOS.DAT FILE TO READ COLUMN HEADERS
+        datafile, __ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
+        if datafile:
+            datafile = str(datafile)
+            spectrum =np.genfromtxt(datafile,dtype=None,skip_header=21,names=True)
+            self.speclist = spectrum.dtype.names[7:-1] #omitting all of the n, n_total stuff
+            self.stack3UI()
+        
+    def clearplot(self):
+        self.figure.clf()
+        self.canvas.draw()
         
     def display(self,i):
         self.Stack.setCurrentIndex(i)
+
+
 def main():
     app = QApplication(sys.argv)
     ex = Window()
