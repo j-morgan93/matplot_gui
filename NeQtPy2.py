@@ -1,7 +1,8 @@
 import sys
+import math
 
-from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QWidget, QFormLayout, QStackedWidget, QListWidget, QApplication, QLineEdit, QRadioButton, QCheckBox, QLabel, QAction, qApp, QMainWindow, QInputDialog, QFileDialog
+from PyQt5 import QtGui, QtWidgets, QtCore
+from PyQt5.QtWidgets import QWidget, QFormLayout, QStackedWidget, QListWidget, QApplication, QLineEdit, QRadioButton, QCheckBox, QLabel, QAction, qApp, QMainWindow, QInputDialog, QFileDialog, QGridLayout
 
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -51,7 +52,18 @@ class Window(QMainWindow):
  
     def saveFileDialog(self):    
         name = QFileDialog.getSaveFileName(self,"Save File","","All Files (*);;Text Files (*.txt)")
-        file = save(name,'r')
+        f = open(filename, 'w')
+        filedata = self.Stack2.toPlainText()
+        filedata = str(filedata)+"\n"
+        f.write(filedata)
+        filedata = self.textEdit2.toPlainText()
+        filedata = str(filedata)+"\n"
+        f.write(filedata)
+        filedata = self.textEdit3.toPlainText()
+        filedata = str(filedata)+"\n"
+        f.write(filedata)
+        f.close()   
+        
         
 class Widgettown(QWidget):
     def __init__(self, parent):
@@ -112,30 +124,39 @@ class Widgettown(QWidget):
         self.stack1.setLayout(layout)
 
     def readplot(self):
+        self.figure.clf()
+
         datafile, __ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
         if datafile:
             datafile = str(datafile)
             spectrum =np.genfromtxt(datafile,dtype=float,comments = "(",skip_header=1,names=True,unpack=True)
             sax = self.figure.add_subplot(111)
             sax.plot(spectrum[spectrum.dtype.names[1]], spectrum[spectrum.dtype.names[2]], '*-')
-
             self.canvas.draw()
            
     def clearplot(self):
+        self.figure.clf()
         self.canvas.draw()
         
     def stack2UI(self):
-        layout = QFormLayout()
-        species = QtWidgets.QHBoxLayout()
-        species.addWidget(QCheckBox("Two-Temp Model"))
-        species.addWidget(QLineEdit())
-        species.addWidget(QLineEdit())
-        species.addWidget(QLineEdit())
-        layout.addRow(QLabel("T_trans"))
-        layout.addRow(QLabel("T_vib"))
-        layout.addRow(QLabel("T_el"))
-        layout.addWidget(QLineEdit())
-        layout.addWidget(QLineEdit())
+        speclist = ["CO","CO2","N","N2","NO","O","O2"]
+        layout = QGridLayout()
+        layout.setColumnStretch(1,6)
+        layout.setColumnStretch(2,6)
+        #temps
+        layout.addWidget(QLineEdit(),1,4)
+        layout.addWidget(QLineEdit(),2,4)
+        layout.addWidget(QLineEdit(),3,4)
+        layout.addWidget(QLabel("T_trans"),1,3,QtCore.Qt.AlignCenter)
+        layout.addWidget(QLabel("T_vib"),2,3,QtCore.Qt.AlignCenter)
+        layout.addWidget(QLabel("T_el"),3,3,QtCore.Qt.AlignCenter)
+        layout.addWidget(QCheckBox(),4,4)
+        layout.addWidget(QLabel("T-Temp Model"),4,3)
+        #number densities
+        for i in range(len(speclist)):
+            layout.addWidget(QLineEdit(),i,1)
+            layout.addWidget(QLabel(speclist[i]),i,0,QtCore.Qt.AlignRight)
+
         self.stack2.setLayout(layout)
         
     def stack3UI(self):
@@ -150,6 +171,7 @@ class Widgettown(QWidget):
 def main():
     app = QApplication(sys.argv)
     ex = Window()
+    ex.setWindowTitle('NeQtPy')
     sys.exit(app.exec_())
         
 if __name__ == '__main__':
