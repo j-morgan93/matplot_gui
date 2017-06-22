@@ -1,5 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jun 22 09:27:57 2017
+This code should allow the user to plot figures, open up a DAT file for the purposes of creating a new file based on a string pulled from DAT file.
+@author: jn3
+"""
 import sys
-import math
 
 from PyQt5 import QtGui, QtWidgets, QtCore
 from PyQt5.QtWidgets import QWidget, QFormLayout, QStackedWidget, QListWidget, QApplication, QLineEdit, QRadioButton, QCheckBox, QLabel, QAction, qApp, QMainWindow, QInputDialog, QFileDialog, QGridLayout
@@ -14,6 +19,7 @@ class Window(QMainWindow):
         super(Window, self).__init__()
         self.initUI()
         
+
     def initUI(self):               
         #defining the exitting,saving and opening of files
         exitAction = QAction('&Exit', self)
@@ -41,19 +47,24 @@ class Window(QMainWindow):
         toolbar.addAction(exitAction)
         toolbar.addAction(openAction)
         toolbar.addAction(saveAction)
+        
         self.content = Widgettown(self)
         self.setCentralWidget(self.content)
         self.show()
         
     def openFileNameDialog(self):
-        name, _ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
+        name, _ = QFileDialog.getOpenFileName(self, "Open DAT File","","DAT Files (*.dat)")
         if name:
-            print(name)
- 
+            datafile = str(name)
+            spectrum =np.genfromtxt(datafile,dtype=None,skip_header=21,names=True)
+            self.speclist = spectrum.dtype.names[7:-1] #omitting
+            self.setCentralWidget(self.content) #can this pass the speclist variable to be used in generating widgets?
+            self.show()
+            
     def saveFileDialog(self):    
         name = QFileDialog.getSaveFileName(self,"Save File","","All Files (*);;Text Files (*.txt)")
         f = open(name[0], 'w')
-        filedata = self.content.linedit[1].toPlainText()
+        filedata = self.content.linedit[1].toPlainText() #unfinished save dialog...needs work
         filedata = str(filedata)+"\n"
         f.write(filedata)
         f.close()
@@ -62,12 +73,13 @@ class Window(QMainWindow):
 class Widgettown(QWidget):
     def __init__(self, parent):
         QWidget.__init__(self, parent)
-        self.speclist = None
-
+        
+        self.speclist = None #initialize the species list
+        
         self.leftlist = QListWidget ()
-        self.leftlist.insertItem (0, 'Plots' )
-        self.leftlist.insertItem (1, 'Spectral Fit - Generate LOS file' )
-        self.leftlist.insertItem (2, 'NEQAIR Simulation - Provide LOS and Write .inp' )
+        self.leftlist.insertItem (0, 'Plotting Things' )
+        self.leftlist.insertItem (1, 'Input FILE MOD' )
+        self.leftlist.insertItem (2, 'Input FILE MOD2' )
         
         self.stack1 = QWidget()
         self.stack2 = QWidget()
@@ -88,7 +100,7 @@ class Widgettown(QWidget):
 
         self.setLayout(hbox)
         self.leftlist.currentRowChanged.connect(self.display)
-        self.setGeometry(10, 10, 10, 10)
+        self.leftlist.setGeometry(50, 50, 50, 50)
         self.setWindowTitle('StackedWidget demo')
         self.show()
         
@@ -119,8 +131,7 @@ class Widgettown(QWidget):
         self.stack1.setLayout(layout)
 
         
-    def stack2UI(self): #THE LOS DATA CAPABILITY
-        self.speclist = ['N2', 'O2', 'NO', 'NO_1', 'N2_1', 'O2_1', 'N', 'O', 'N_1', 'O_1', 'E']
+    def stack2UI(self): #THE  MOD1 CAPABILITY
         layout = QGridLayout()
         layout.setColumnStretch(1,6)
         layout.setColumnStretch(2,6)
@@ -133,7 +144,8 @@ class Widgettown(QWidget):
         layout.addWidget(QLabel("T_el"),3,3,QtCore.Qt.AlignCenter)
         layout.addWidget(QCheckBox(),4,4)
         layout.addWidget(QLabel("T-Temp Model"),4,3)
-        #number densities
+        
+        ##where the linedits are created based on speclist length and contents
         linedits = {}
         if self.speclist:
             for i in range(len(self.speclist)):
@@ -144,21 +156,23 @@ class Widgettown(QWidget):
 
         self.stack2.setLayout(layout)
         
-    def stack3UI(self): #THE NEQAIR MODEL CAPABILITY
+    def stack3UI(self): #THE  MOD2 CAPABILITY
         layout = QGridLayout()
         layout.addWidget(QLabel("Bands maybe"),1,1)
         layout.addWidget(QCheckBox("b-f"),1,2)
         layout.addWidget(QCheckBox("f-f"),1,3)
         self.losopen = QtWidgets.QPushButton('Read LOS')
+        self.losopen.clicked.connect(self.ReadLOS)
         layout.addWidget(self.losopen,0,0)
-        if self.losopen.clicked.connect(self.ReadLOS):
-            linedits = {}
+        
+        ##where the linedits are created based on speclist length and contents
+        linedits = {}
+        if self.speclist:
             for i in range(len(self.speclist)):
                 self.mylinedit = QtWidgets.QLineEdit("0.0")
                 linedits[i] = self.mylinedit
                 layout.addWidget(linedits[i],i,1)
                 layout.addWidget(QLabel(self.speclist[i]),i,0,QtCore.Qt.AlignRight)
-                self.stack3.setLayout(layout)
 
         self.stack3.setLayout(layout)
         
@@ -174,14 +188,14 @@ class Widgettown(QWidget):
             self.canvas.draw()
                   
     
-    def ReadLOS(self): #OPENING LOS.DAT FILE TO READ COLUMN HEADERS
+    def ReadLOS(self): #OPENING DAT FILE TO READ COLUMN HEADERS
         datafile, __ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
         if datafile:
             datafile = str(datafile)
             spectrum =np.genfromtxt(datafile,dtype=None,skip_header=21,names=True)
-            self.speclist = spectrum.dtype.names[7:-1] #omitting all of the n, n_total stuff
-            self.stack3UI()
-        
+            self.speclist = spectrum.dtype.names[7:-1] #omitting some things
+
+                
     def clearplot(self):
         self.figure.clf()
         self.canvas.draw()
