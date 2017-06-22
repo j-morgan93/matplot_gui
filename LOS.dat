@@ -1,47 +1,23 @@
-********************************************************************************
-                    LOS file for EAST MWIR CO2 Test Case
-
-       An unlimited number of comment lines can go here.
-
-       Enter Data AFTER the data-format lines!
-
-   (1) Enter species in any order; limited to atoms, diatomics, triatomics,
-       atomic ions, diatiomic ions, and electrons. Left-justify the species
-       symbols in the fields.  Dimensioned up to 25 species.  End entry
-       with a blank line.
-
-   (2) Properties entered at each grid point along line-of-sight.  The
-       properties apply to the layer between the grid point and the
-       previous grid point.  Thus, the properties at the first grid point
-       are not used.  This grid point only establishes the origin of the
-       line-of-sight.
-
-   (3) Enter species number densities [cm-3] in the same order that the species
-       symbols are entered.  End data entry at each grid point with a blank
-       line.
-
-   (4) End line-of-sight data entry, with a line of 0's as shown.
-
-********************************************************************************
-         aaaaaaaa       aaaaaaaa       aaaaaaaa       aaaaaaaa    (2x,(7x,a8))
-         CO2            CO             N2             O2       :Species Symbols.
-         NO             N              O
-
---------------------------------------------------------------------------------
-   no.   x,cm   total partcc       t        tr        tv        te  (i5,f8.3,
-iiiii rrrrrrr rrrrrrrrrrrrrr rrrrrrrrr rrrrrrrrr rrrrrrrrr rrrrrrrrre15.6,4f10.1
-       rrrrrrrrrrrrrr rrrrrrrrrrrrrr rrrrrrrrrrrrrr rrrrrrrrrrrrr   (6x,4e15.6)
-       Include these 9 lines (from --- to --- lines) for first grid point only!!
-       End each grid point entry with a blank line.
-       End data file with a line of zero's as shown on the next line.
-    0     0.0            0.0       0.0       0.0       0.0       0.0
---------------------------------------------------------------------------------
-    1  0.0000000E+00  8.0266E+17    2978.84   2978.84   2978.84   2978.84
-        2.5214000E+17  3.3091000E+17  2.1256000E+16  1.3256000E+17
-        6.0713000E+15  2.7567000E+12  5.9713000E+16
-
-    2  1.0160000E+01  8.0266E+17    2978.84   2978.84   2978.84   2978.84
-        2.5214000E+17  3.3091000E+17  2.1256000E+16  1.3256000E+17
-        6.0713000E+15  2.7567000E+12  5.9713000E+16
-
-    1     0.0            0.0       0.0       0.0       0.0       0.0
+#15.0
+#             This is the NEQAIR15 LOS.dat file
+#
+# An unlimited number of comment lines is allowed here
+# The first line to begin with a numeric is the start of the LOS data
+# This data is in row/column format, separated by white space
+# The final text line contains the headers for the columns
+#
+# Valid entries for headers include:
+#  n    - index of LOS number (optional)
+#  x    - Distance on line of sight (cm).  May also be denoted as 'y' or 'z'
+#  ntot - total number density (1/cm3, optional), if omitted, species densities are summed to get total
+#  T    - Temperature (K).  Up to 5 different temperatures may (optionally) be specified:
+#  Tt   - Translational Temperature (K).  Assumed same as T.  If omitted, set to Tr
+#  Tr   - Rotational Temperature (K).  If omitted, set to (in order of preference) Tt, Tv, Te, Tel
+#  Tv   - Vibrational Temperature (K).  If omitted, set to (in order of preference) Te, Tel, Tr, Tt
+#  Te   - Electronic Temperature (K).  If omitted, set to (in order of preference) Tel, Tv, Tr, Tt
+#  Tel  - Electron Temperature (K).  If omitted, set to (in order of preference) Te, Tv, Tr, Tt
+#         (Tel currently not supported.  May be entered, but is not used in computation.)
+#  XXX  - Any entry following these are assumed to be species names and densities (1/cm3)
+#
+                n                 x              ntot                Tt                Tr                Tv                Te          N2                O2                NO                NO+               N2+               O2+               N                 O                 N+                O+                E-
+            1    0.00000000E+00    0.41949470E+17    0.33760000E+03    0.33760000E+03    0.42930000E+03    0.42930000E+03    0.33057171E+17    0.87495828E+16    0.12459893E+14    0.13993232E+12    0.46706089E+10    0.96575324E+10    0.42775215E+14    0.87158283E+14    0.93499827E+09    0.51568026E+10    0.16035226E+12

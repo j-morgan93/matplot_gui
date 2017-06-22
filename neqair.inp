@@ -1,0 +1,33 @@
+15.0
+***************************
+NEQAIR Input File Template
+For versions newer than 14.0, the version number is listed on the first line
+The inputs are separated below, each section enclosed by ----'s
+The first line in the section is a description
+The second line is read by NEQAIR as a character sequence
+In some cases additional lines may follow
+A blank line ends the input section
+Following lines are used for comments and ignored by the code
+***************************
+Line 0: Header - anything between here and the ---'s writes to stdout
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa <- 1st format line
+--------------------------
+Line 1: Database path - if empty, looks for local DATABASES directory
+/share/apps/neqair/v15.0-prerelease/DATABASES
+-------------------------
+Line 2: Output type : a string of letters indicating one or more output files
+ILMS
+
+Allowed input choices for line 2:
+(I)ntensity.out - write intensity vs. wavelength (high resolution)
+Intensity_(S)canned.out - write the scanned intensity v. wavelength file
+(L)OS.out - write radiance versus position on the normal line of sight
+(P)opulation - write state population for each atom at each LOS point
+(A)bsorbance/Emittance - write absorbance/emittance at each LOS point
+(C)oupling.out - data needed for flowfield/radiation coupling
+(2) a 2 following an I or S means the output is in columns, where each column is an LOS point
+(M) write general messages to stdout
+
+--------------------------
+Line 3: State population method
+N Q L      1.
