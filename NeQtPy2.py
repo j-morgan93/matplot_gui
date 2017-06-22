@@ -1,10 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun 22 09:27:57 2017
-This code should allow the user to plot figures, open up a DAT file for the purposes of creating a new file based on a string pulled from DAT file.
-@author: jn3
-"""
 import sys
+import math
 
 from PyQt5 import QtGui, QtWidgets, QtCore
 from PyQt5.QtWidgets import QWidget, QFormLayout, QStackedWidget, QListWidget, QApplication, QLineEdit, QRadioButton, QCheckBox, QLabel, QAction, qApp, QMainWindow, QInputDialog, QFileDialog, QGridLayout
@@ -19,7 +14,6 @@ class Window(QMainWindow):
         super(Window, self).__init__()
         self.initUI()
         
-
     def initUI(self):               
         #defining the exitting,saving and opening of files
         exitAction = QAction('&Exit', self)
@@ -47,39 +41,40 @@ class Window(QMainWindow):
         toolbar.addAction(exitAction)
         toolbar.addAction(openAction)
         toolbar.addAction(saveAction)
-        
         self.content = Widgettown(self)
         self.setCentralWidget(self.content)
         self.show()
         
     def openFileNameDialog(self):
-        name, _ = QFileDialog.getOpenFileName(self, "Open DAT File","","DAT Files (*.dat)")
+        name, _ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
         if name:
-            datafile = str(name)
-            spectrum =np.genfromtxt(datafile,dtype=None,skip_header=21,names=True)
-            self.speclist = spectrum.dtype.names[7:-1] #omitting
-            self.setCentralWidget(self.content) #can this pass the speclist variable to be used in generating widgets?
-            self.show()
-            
+            print(name)
+ 
     def saveFileDialog(self):    
         name = QFileDialog.getSaveFileName(self,"Save File","","All Files (*);;Text Files (*.txt)")
         f = open(name[0], 'w')
-        filedata = self.content.linedit[1].toPlainText() #unfinished save dialog...needs work
-        filedata = str(filedata)+"\n"
-        f.write(filedata)
+        print(self.content.speclist)
+        for i in range(len(self.content.speclist)):
+            if self.content.bs[i].isChecked() == True:
+                print("hello")
+                filedata =self.content.speclist[i]+"\n" 
+                print(filedata)
+                f.write(filedata)
+          #  for j in range(len(self.content.cs[i,:])):
+          #      if self.content.cs[i,j].isChecked == True: #need a way to loop over all of the specific bands...maybe put the band (str) in matrix
+          #          print("true")    
         f.close()
         
         
 class Widgettown(QWidget):
     def __init__(self, parent):
         QWidget.__init__(self, parent)
-        
-        self.speclist = None #initialize the species list
-        
+        self.speclist = None
+
         self.leftlist = QListWidget ()
-        self.leftlist.insertItem (0, 'Plotting Things' )
-        self.leftlist.insertItem (1, 'Input FILE MOD' )
-        self.leftlist.insertItem (2, 'Input FILE MOD2' )
+        self.leftlist.insertItem (0, 'Plots' )
+        self.leftlist.insertItem (1, 'Spectral Fit - Generate LOS file' )
+        self.leftlist.insertItem (2, 'NEQAIR Simulation - Provide LOS and Write .inp' )
         
         self.stack1 = QWidget()
         self.stack2 = QWidget()
@@ -100,7 +95,7 @@ class Widgettown(QWidget):
 
         self.setLayout(hbox)
         self.leftlist.currentRowChanged.connect(self.display)
-        self.leftlist.setGeometry(50, 50, 50, 50)
+        self.setGeometry(10, 10, 10, 10)
         self.setWindowTitle('StackedWidget demo')
         self.show()
         
@@ -131,10 +126,11 @@ class Widgettown(QWidget):
         self.stack1.setLayout(layout)
 
         
-    def stack2UI(self): #THE  MOD1 CAPABILITY
+    def stack2UI(self): #THE LOS DATA CAPABILITY
         layout = QGridLayout()
         layout.setColumnStretch(1,6)
         layout.setColumnStretch(2,6)
+        
         #temps
         layout.addWidget(QLineEdit(),1,4)
         layout.addWidget(QLineEdit(),2,4)
@@ -144,8 +140,7 @@ class Widgettown(QWidget):
         layout.addWidget(QLabel("T_el"),3,3,QtCore.Qt.AlignCenter)
         layout.addWidget(QCheckBox(),4,4)
         layout.addWidget(QLabel("T-Temp Model"),4,3)
-        
-        ##where the linedits are created based on speclist length and contents
+        #number densities
         linedits = {}
         if self.speclist:
             for i in range(len(self.speclist)):
@@ -156,25 +151,15 @@ class Widgettown(QWidget):
 
         self.stack2.setLayout(layout)
         
-    def stack3UI(self): #THE  MOD2 CAPABILITY
-        layout = QGridLayout()
-        layout.addWidget(QLabel("Bands maybe"),1,1)
-        layout.addWidget(QCheckBox("b-f"),1,2)
-        layout.addWidget(QCheckBox("f-f"),1,3)
-        self.losopen = QtWidgets.QPushButton('Read LOS')
-        self.losopen.clicked.connect(self.ReadLOS)
-        layout.addWidget(self.losopen,0,0)
+    def stack3UI(self): #THE NEQAIR MODEL CAPABILITY
+        self.losopen = QtWidgets.QPushButton('Read LOS') #make the button
+        self.losopen.clicked.connect(self.ReadLOS) #define the button's functionality
+        self.layout1 = QGridLayout() #make a grid layout
         
-        ##where the linedits are created based on speclist length and contents
-        linedits = {}
-        if self.speclist:
-            for i in range(len(self.speclist)):
-                self.mylinedit = QtWidgets.QLineEdit("0.0")
-                linedits[i] = self.mylinedit
-                layout.addWidget(linedits[i],i,1)
-                layout.addWidget(QLabel(self.speclist[i]),i,0,QtCore.Qt.AlignRight)
+        self.layout1.addWidget(self.losopen,0,0) #the first member of the layout is going to open a file and define the rest of the widgets in the layout
+        
 
-        self.stack3.setLayout(layout)
+        self.stack3.setLayout(self.layout1) #apparently sets the layout of the widget with new buttons
         
     def readplot(self): #OPENING AND READING FIGURE IN
         self.figure.clf()
@@ -188,14 +173,63 @@ class Widgettown(QWidget):
             self.canvas.draw()
                   
     
-    def ReadLOS(self): #OPENING DAT FILE TO READ COLUMN HEADERS
+    def ReadLOS(self): #OPENING LOS.DAT FILE TO READ COLUMN HEADERS
+        aband = ["bb","bf","ff"]
+        n2band = ["1+", "2+", "BH2", "LBH", "BH1", "WJ", "CY"]
+        o2band = ["SR"]
+        noband = ["beta", "gam", "del", "eps", "bp", "gp", "IR"]
         datafile, __ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
         if datafile:
             datafile = str(datafile)
             spectrum =np.genfromtxt(datafile,dtype=None,skip_header=21,names=True)
-            self.speclist = spectrum.dtype.names[7:-1] #omitting some things
+            self.speclist = spectrum.dtype.names[7:-1]#omitting all of the n, n_total stuff
+            self.speclist = [w.replace('_1','+') for w in self.speclist] #erasing the nasty characters and replacing with user-identifiables
+            self.speclist.sort() #sort the list
+            self.bs = {}  #create dictionary (jus so I can later call on values?)
+            self.cs = {}
+            self.allcheck = QtWidgets.QCheckBox()
+            self.layout1.addWidget(self.allcheck,0,1)
+            self.layout1.addWidget(QLabel("Check All Bands"),0,2,1,7,QtCore.Qt.AlignLeft)
+            
+            #self.allcheck.connect(self.CheckAll) add the check all features!!!!!!!!
+            for i in range(len(self.speclist)):
 
-                
+                self.b = QtWidgets.QPushButton(self.speclist[i], self)
+                self.bs[i] = self.b 
+                self.bs[i].setCheckable(True)
+                self.layout1.addWidget(self.bs[i],i+1, 0)
+                if len(self.speclist[i]) == 1:
+                    for j in range(3): #making specific bands for atomic molecules (bf, bb, ff)
+                        self.c = QtWidgets.QCheckBox(self)
+                        self.cs[i,j] = self.c
+                        self.layout1.addWidget(self.cs[i,j],i+1,j*2+1,QtCore.Qt.AlignRight)
+                        self.layout1.addWidget(QLabel(aband[j]),i+1,j*2+2)
+                if len(self.speclist[i]) == 2 and "+" in self.speclist[i]: #making specific bands for atomic molecules (bf, bb, ff)
+                     for j in range(3):
+                        self.c = QtWidgets.QCheckBox(self)
+                        self.cs[i,j] = self.c
+                        self.layout1.addWidget(self.cs[i,j],i+1,j*2+1,QtCore.Qt.AlignRight)
+                        self.layout1.addWidget(QLabel(aband[j]),i+1,j*2+2)
+                if "N2" in self.speclist[i]:
+                    for j in range(len(n2band)):
+                        self.c = QtWidgets.QCheckBox(self)
+                        self.cs[i,j] = self.c
+                        self.layout1.addWidget(self.cs[i,j],i+1,j*2+1,QtCore.Qt.AlignRight)
+                        self.layout1.addWidget(QLabel(n2band[j]),i+1,j*2+2)
+                if "O2" in self.speclist[i]:
+                    for j in range(len(o2band)):
+                        self.c = QtWidgets.QCheckBox(self)
+                        self.cs[i,j] = self.c
+                        self.layout1.addWidget(self.cs[i,j],i+1,j*2+1,QtCore.Qt.AlignRight)
+                        self.layout1.addWidget(QLabel(o2band[j]),i+1,j*2+2)
+                if "NO" in self.speclist[i]:
+                    for j in range(len(noband)):
+                        self.c = QtWidgets.QCheckBox(self)
+                        self.cs[i,j] = self.c
+                        self.layout1.addWidget(self.cs[i,j],i+1,j*2+1,QtCore.Qt.AlignRight)
+                        self.layout1.addWidget(QLabel(noband[j]),i+1,j*2+2)        
+        
+        
     def clearplot(self):
         self.figure.clf()
         self.canvas.draw()
