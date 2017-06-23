@@ -80,7 +80,7 @@ class Widgettown(QWidget):
         self.leftlist.insertItem (0, 'Plotting Things' )
         self.leftlist.insertItem (1, 'Input FILE MOD' )
         self.leftlist.insertItem (2, 'Input FILE MOD2' )
-        
+
         self.stack1 = QWidget()
         self.stack2 = QWidget()
         self.stack3 = QWidget()
@@ -93,15 +93,13 @@ class Widgettown(QWidget):
         self.Stack.addWidget (self.stack1)
         self.Stack.addWidget (self.stack2)
         self.Stack.addWidget (self.stack3)
-        
+
         hbox = QtWidgets.QHBoxLayout(self)
         hbox.addWidget(self.leftlist)
         hbox.addWidget(self.Stack)
 
         self.setLayout(hbox)
         self.leftlist.currentRowChanged.connect(self.display)
-        self.leftlist.setGeometry(50, 50, 50, 50)
-        self.setWindowTitle('StackedWidget demo')
         self.show()
         
     def openFileNameDialog(self):
@@ -139,11 +137,11 @@ class Widgettown(QWidget):
         layout.addWidget(QLineEdit(),1,4)
         layout.addWidget(QLineEdit(),2,4)
         layout.addWidget(QLineEdit(),3,4)
-        layout.addWidget(QLabel("T_trans"),1,3,QtCore.Qt.AlignCenter)
-        layout.addWidget(QLabel("T_vib"),2,3,QtCore.Qt.AlignCenter)
-        layout.addWidget(QLabel("T_el"),3,3,QtCore.Qt.AlignCenter)
+        layout.addWidget(QLabel("T1"),1,3,QtCore.Qt.AlignCenter)
+        layout.addWidget(QLabel("T2"),2,3,QtCore.Qt.AlignCenter)
+        layout.addWidget(QLabel("T3"),3,3,QtCore.Qt.AlignCenter)
         layout.addWidget(QCheckBox(),4,4)
-        layout.addWidget(QLabel("T-Temp Model"),4,3)
+        layout.addWidget(QLabel("T check"),4,3)
         
         ##where the linedits are created based on speclist length and contents
         linedits = {}
@@ -158,10 +156,10 @@ class Widgettown(QWidget):
         
     def stack3UI(self): #THE  MOD2 CAPABILITY
         layout = QGridLayout()
-        layout.addWidget(QLabel("Bands maybe"),1,1)
-        layout.addWidget(QCheckBox("b-f"),1,2)
-        layout.addWidget(QCheckBox("f-f"),1,3)
-        self.losopen = QtWidgets.QPushButton('Read LOS')
+        layout.addWidget(QLabel("Check maybe"),1,1)
+        layout.addWidget(QCheckBox("C1"),1,2)
+        layout.addWidget(QCheckBox("C2"),1,3)
+        self.losopen = QtWidgets.QPushButton('Read DAT')
         self.losopen.clicked.connect(self.ReadLOS)
         layout.addWidget(self.losopen,0,0)
         
