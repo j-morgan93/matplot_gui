@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Jun 24 10:03:22 2017
+
+@author: Jonathan
+"""
+
 import sys
 import math
 
@@ -171,10 +178,13 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         il4info = ["(T) Tangent Slab","(C) Spherical Cap","(S) Shock Tube","(L) Line of Sight","(B) Blackbody","(P) Calculate Populations",
 "(X) Perform scan on existing intensity.out"]
         il5info = ["(B) Blackbody","(I) read Intensity.in","(N) no initial radiance","(I) read emissivity.in","(G) Greybody","(B) Blackbody"]
+        il6info = ["WL1","WL2","A/M","Delta","R","dd"]
         self.il2s = {}
         self.il3s = {}
         self.il4s = {}
         self.il5s = {}
+        self.il6s = {}
+        
         self.layout3 = QtWidgets.QVBoxLayout(self)
         self.tabs = QtWidgets.QTabWidget()
         self.tab1 = QWidget()	
@@ -254,8 +264,25 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         #Create fourth tab
         self.tab4.layout3 = QGridLayout()
         self.regionbox = QtWidgets.QSpinBox(self)
+        self.regionbox.setValue(4)
         self.tab4.layout3.addWidget(self.regionbox,0,0)
         self.tab4.setLayout(self.tab4.layout3)
+        for i in range(self.regionbox.value()):
+            self.il61 = QtWidgets.QLineEdit(0.0,self)
+            #self.il62 = QtWidgets.QLineEdit(il6info[1],self)
+            #self.il63 = QtWidgets.QLineEdit(il6info[2],self)
+            #self.il64 = QtWidgets.QLineEdit(il6info[3],self)
+            #self.il65 = QtWidgets.QLineEdit(il6info[4],self)
+            #self.il66 = QtWidgets.QLineEdit(il6info[5],self)
+            self.il6s[i,0] = self.il61# , self.il6s[i,1] = self.il62, self.il6s[i,2] = self.il63 , self.il6s[i,3] = self.il64
+            #self.il6s[i,4] = self.il65 , self.il6s[i,5] = self.il66
+            self.tab4.layout3.addWidget(self.il6s[i,0],i+1,0)
+            #self.tab4.layout3.addWidget(self.il6s[i,1],i+1,1)
+            #self.tab4.layout3.addWidget(self.il6s[i,2],i+1,2)
+            #self.tab4.layout3.addWidget(self.il6s[i,3],i+1,3)
+            #self.tab4.layout3.addWidget(self.il6s[i,4],i+1,4)
+            #self.tab4.layout3.addWidget(self.il6s[i,5],i+1,5)
+            
         
         # Add tabs to widget        
         self.layout3.addWidget(self.tabs)
