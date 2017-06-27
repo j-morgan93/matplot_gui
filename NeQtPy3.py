@@ -6,7 +6,6 @@ Created on Sat Jun 24 10:03:22 2017
 """
 
 import sys
-import math
 
 from PyQt5 import QtGui, QtWidgets, QtCore
 from PyQt5.QtWidgets import QWidget, QFormLayout, QStackedWidget, QListWidget, QApplication, QLineEdit, QRadioButton, QCheckBox, QLabel, QAction, qApp, QMainWindow, QInputDialog, QFileDialog, QGridLayout
@@ -68,18 +67,86 @@ class Window(QMainWindow):
     def saveFileDialog(self):   #MASTER WRITE CAPABILITY
         name = QFileDialog.getSaveFileName(self,"Save File","","All Files (*);;Text Files (*.txt)")
         f = open(name[0], 'w')
-        print(self.content.speclist)
+        #print(self.content.speclist)
         f.write("15.0\n")
+        f.write("----\n")
+        for i in range(len(self.content.il2s)):
+            if self.content.il2s[i].isChecked() == True:
+                data = self.content.il2info[i]
+                data = data[data.find("(")+1:data.find(")")].split()[0]
+                f.write(data)
+                if i == 0 or i == 3:
+                    data = str(2)
+                    f.write(data)
+        f.write("\n\n")
+        f.write("----\n")
+        for i in range(len(self.content.il3s)):
+            if self.content.il3s[i].isChecked() == True:
+                data = self.content.il3info[i]
+                data = data[data.find("(")+1:data.find(")")].split()[0]
+                f.write(data)
+                if "Non" in self.content.il3s[i].text() and self.content.il3s[i].isChecked() == True:
+                    if self.content.nbdrop1.currentIndex() != 0:
+                        ind = self.content.nbdrop1.currentIndex()
+                        data = self.content.nbdrop1.itemText(ind)
+                        data = data[data.find("(")+1:data.find(")")].split()[0]
+                        f.write(" "+data)
+                    ind = self.content.nbdrop2.currentIndex()
+                    data = self.content.nbdrop2.itemText(ind)
+                    data = data[data.find("(")+1:data.find(")")].split()[0]
+                    f.write(" "+data)
+                    f.write("\n")
+                #    f.write(data)
+        f.write("\n\n")
+        f.write("----\n")
+        for i in range(len(self.content.il4s)):
+            if self.content.il4s[i].isChecked() == True:
+                data = self.content.il4info[i]
+                data = data[data.find("(")+1:data.find(")")].split()[0]
+                f.write(data)
+        f.write("\n\n")
+        f.write("----\n")
+        for i in range(len(self.content.il5s)):
+            if self.content.il5s[i].isChecked() == True:
+                data = self.content.il5info[i]
+                data = data[data.find("(")+1:data.find(")")].split()[0]
+                f.write(data)
+        f.write("\n\n")
+        f.write("----\n")
         for i in range(len(self.content.speclist)):
             if self.content.bs[i].isChecked() == True:
-                print("hello")
-                filedata =self.content.speclist[i]+"\n" 
-                print(filedata)
-                f.write(filedata)
-          #  for j in range(len(self.content.cs[i,:])):
-          #      if self.content.cs[i,j].isChecked == True: 
-          ##need a way to loop over all of the specific bands...maybe put the band (str) in matrix
-          #          print("true")    
+                filedata =self.content.speclist[i] 
+                f.write(filedata+" ")
+                if len(self.content.bs[i].text()) == 1 or (len(self.content.bs[i].text()) == 2 and "+" in self.content.bs[i].text()):
+                    for j in range(3):
+                        if self.content.cs[i,j].isChecked() == True:
+                            f.write(self.content.aband[j]+" ")
+                    f.write("\n")
+                if not "+" in self.content.bs[i].text():
+                    if "NO" in self.content.bs[i].text():
+                        for j in range(len(self.content.noband)):
+                            if self.content.cs[i,j].isChecked() == True:
+                                f.write(self.content.noband[j]+" ")
+                        f.write("\n")
+                    if "N2" in self.content.bs[i].text():
+                        for j in range(len(self.content.n2band)):
+                            if self.content.cs[i,j].isChecked() == True:
+                                f.write(self.content.n2band[j]+" ")
+                        f.write("\n")
+                    if "O2" in self.content.bs[i].text():
+                        for j in range(len(self.content.o2band)):
+                            if self.content.cs[i,j].isChecked() == True:
+                                f.write(self.content.o2band[j]+" ")
+                        f.write("\n")
+        f.write("\n")
+        f.write("----\n")\
+        for i in range(len(self.content.il6s)):
+            if self.content.il6s[i].isChecked() == True:
+                data = self.content.il5info[i]
+                data = data[data.find("(")+1:data.find(")")].split()[0]
+                f.write(data)
+        f.write("\n\n")
+        f.write("----\n")
         f.close()
         
         
@@ -170,72 +237,70 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.stack2.setLayout(layout)
         
     def stack3UI(self): #THE NEQAIR MODEL INPUT CAPABILITY
-        il2info = ["(I)ntensity.out", "Intensity_(S)canned.out", "(L)OS.out", "(P)opulation","(A)bsorbance/Emittance","(C)oupling.out",
+    ######################################################TABS#####################################################
+    ################################################################################################################
+        self.il2info = ["(I)ntensity.out", "Intensity_(S)canned.out", "(L)OS.out", "(P)opulation","(A)bsorbance/Emittance","(C)oupling.out",
 "(M) stdout"]
-        il3info = ["(B) Boltzmann","(N) Non-Boltzmann","(Q) Traditional QSS ","(T) Time derivative limited","(R) Reaction residual limited ",
+        self.il3info = ["(B) Boltzmann","(N) Non-Boltzmann","(Q) Traditional QSS ","(T) Time derivative limited","(R) Reaction residual limited ",
 "(F) Flux limited","(C) Constant escape factor","(L) Local Escape factor","(F) Full local calculation","(N) Non-local coupling",
 "(S) Saha","(F) Input from File","(A) absorption/emission coefficients from File"]
-        il4info = ["(T) Tangent Slab","(C) Spherical Cap","(S) Shock Tube","(L) Line of Sight","(B) Blackbody","(P) Calculate Populations",
+        self.il4info = ["(T) Tangent Slab","(C) Spherical Cap","(S) Shock Tube","(L) Line of Sight","(B) Blackbody","(P) Calculate Populations",
 "(X) Perform scan on existing intensity.out"]
-        il5info = ["(B) Blackbody","(I) read Intensity.in","(N) no initial radiance","(I) read emissivity.in","(G) Greybody","(B) Blackbody"]
-        il6info = ["WL1","WL2","A/M","Delta","R","dd"]
+        self.il5info = ["(B) Blackbody","(I) read Intensity.in","(N) no initial radiance","(I) read emissivity.in","(G) Greybody","(B) Blackbody"]
+        self.il6info = ["WL1","WL2","A","M","Delta","R","dd"]
+        self.il7info = ["ICCD1","ICCD2","Voigt","Gauss"]
+        #create the dictionaries to place the widgets within for each tab.
         self.il2s = {}
         self.il3s = {}
         self.il4s = {}
         self.il5s = {}
         self.il6s = {}
+        self.il7s = {}
         
         self.layout3 = QtWidgets.QVBoxLayout(self)
-        self.tabs = QtWidgets.QTabWidget()
+        self.tabs = QtWidgets.QTabWidget() #create the tabs
         self.tab1 = QWidget()	
         self.tab2 = QWidget()
         self.tab3 = QWidget()
         self.tab4 = QWidget()
+        self.tab5 = QWidget()
         
-       # Add tabs
-        self.tabs.addTab(self.tab1,"File Setup")
+        self.tabs.addTab(self.tab1,"File Setup") # Add tabs
         self.tabs.addTab(self.tab2,"Species Information")
         self.tabs.addTab(self.tab3,"Geometry \& Boundary Conditions")
-        self.tabs.addTab(self.tab4,"Region\Line Style")
+        self.tabs.addTab(self.tab4,"Regions")
+        self.tabs.addTab(self.tab5,"Line Style")
         
        # Create first tab - Generic File information (sim type and such)
-        self.tab1.layout3 = QGridLayout()
-
-        
+        self.tab1.layout3 = QGridLayout()      
         count = 0
         for i in range(7): #INPUT LINE 2
-            self.il2 = QtWidgets.QCheckBox(il2info[i],self)
+            self.il2 = QtWidgets.QCheckBox(self.il2info[i],self)
             self.il2s[i] = self.il2
             self.tab1.layout3.addWidget(self.il2s[i],i+1,0)
             #self.tab1.layout3.addWidget(QLabel(il2info[i]),i+1,1)
-            if "(I)" in il2info[i] or "(S)" in il2info[i]:
+            if "(I)" in self.il2info[i] or "(S)" in self.il2info[i]:
                 self.il2 = QtWidgets.QCheckBox("Column Format?",self)
                 self.il2s[i] = self.il2
                 self.tab1.layout3.addWidget(self.il2s[i],i+1,2,QtCore.Qt.AlignRight)
-                #self.tab1.layout3.addWidget(QLabel("Column Format?"),i+1,3,QtCore.Qt.AlignLeft)
-                count+=1
-                
-            count+=1
-          
+                count+=1                
+            count+=1          
         for i in range(2): #INPUT LINE 3
-            self.il3 = QtWidgets.QCheckBox(il3info[i],self)
+            self.il3 = QtWidgets.QCheckBox(self.il3info[i],self)
             self.il3s[i] = self.il3
             self.tab1.layout3.addWidget(self.il3s[i],count+i+1,0)
-            #self.tab1.layout3.addWidget(QLabel(il3info[i]),count+i+1,1)
-            if "Non-B" in il3info[i]:
+            if "Non-B" in self.il3info[i]:
                 self.nbdrop1 = QtWidgets.QComboBox()
-                self.nbdrop1.addItems(il3info[2:5])
+                self.nbdrop1.addItem("--optional--")
+                self.nbdrop1.addItems(self.il3info[2:5])
                 self.nbdrop2 = QtWidgets.QComboBox()
-                self.nbdrop2.addItems(il3info[6:9])
+                self.nbdrop2.addItems(self.il3info[6:9])
                 self.tab1.layout3.addWidget(self.nbdrop1,count+i+1,2)
-                #self.tab1.layout3.addWidget(QLabel(il3info[2]+"optional"),count+i+1,3)
                 self.tab1.layout3.addWidget(self.nbdrop2,count+i+1,3)
-                #self.tab1.layout3.addWidget(QLabel(il3info[2]+"required"),count+i+1,3)
         for i in range(3):
-            self.il3 = QtWidgets.QCheckBox(il3info[i+10],self)
+            self.il3 = QtWidgets.QCheckBox(self.il3info[i+10],self)
             self.il3s[i+2] = self.il3
             self.tab1.layout3.addWidget(self.il3s[i+2],count+i+3,0)
-            #self.tab1.layout3.addWidget(QLabel(il3info[i+10]),count+i+3,1)
             
         self.tab1.setLayout(self.tab1.layout3)
        
@@ -250,13 +315,12 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.tab3.layout3 = QGridLayout()
         self.tab3.layout3.addWidget(QLabel("GEOMETRY"),0,0,QtCore.Qt.AlignTop)
         self.tab3.layout3.addWidget(QLabel("BOUNDARY CONDITIONS"),0,1,QtCore.Qt.AlignTop)
-        for i in range(len(il4info)): #INPUT LINE 4
-            self.il4 = QtWidgets.QCheckBox(il4info[i],self)
+        for i in range(len(self.il4info)): #INPUT LINE 4
+            self.il4 = QtWidgets.QCheckBox(self.il4info[i],self)
             self.il4s[i] = self.il4
             self.tab3.layout3.addWidget(self.il4s[i],count+i+2,0)
-            #self.tab3.layout3.addWidget(QLabel(il4info[i]),count+i+1,1)
-        for i in range(len(il5info)): #INPUT LINE 5
-            self.il5 = QtWidgets.QCheckBox(il5info[i],self)
+        for i in range(len(self.il5info)): #INPUT LINE 5
+            self.il5 = QtWidgets.QCheckBox(self.il5info[i],self)
             self.il5s[i] = self.il5
             self.tab3.layout3.addWidget(self.il5s[i],count+i+2,1)
         self.tab3.setLayout(self.tab3.layout3)
@@ -265,29 +329,48 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.tab4.layout3 = QGridLayout()
         self.regionbox = QtWidgets.QSpinBox(self)
         self.regionbox.setValue(4)
-        self.tab4.layout3.addWidget(self.regionbox,0,0)
-        self.tab4.setLayout(self.tab4.layout3)
-        for i in range(self.regionbox.value()):
-            self.il61 = QtWidgets.QLineEdit(0.0,self)
-            #self.il62 = QtWidgets.QLineEdit(il6info[1],self)
-            #self.il63 = QtWidgets.QLineEdit(il6info[2],self)
-            #self.il64 = QtWidgets.QLineEdit(il6info[3],self)
-            #self.il65 = QtWidgets.QLineEdit(il6info[4],self)
-            #self.il66 = QtWidgets.QLineEdit(il6info[5],self)
-            self.il6s[i,0] = self.il61# , self.il6s[i,1] = self.il62, self.il6s[i,2] = self.il63 , self.il6s[i,3] = self.il64
-            #self.il6s[i,4] = self.il65 , self.il6s[i,5] = self.il66
-            self.tab4.layout3.addWidget(self.il6s[i,0],i+1,0)
-            #self.tab4.layout3.addWidget(self.il6s[i,1],i+1,1)
-            #self.tab4.layout3.addWidget(self.il6s[i,2],i+1,2)
-            #self.tab4.layout3.addWidget(self.il6s[i,3],i+1,3)
-            #self.tab4.layout3.addWidget(self.il6s[i,4],i+1,4)
-            #self.tab4.layout3.addWidget(self.il6s[i,5],i+1,5)
+        self.tab4.layout3.addWidget(self.regionbox,0,2,1,2)
+        self.regionbox.valueChanged.connect(self.regionchange)
+        for i in range(self.regionbox.value()): #create default number of tables
+            for j in range(2):
+                self.il6 = QtWidgets.QLineEdit("0.0",self)
+                self.il6s[i,j] = self.il6
+                self.tab4.layout3.addWidget(self.il6s[i,j],i+1,j)
+            self.nbdrop3 = QtWidgets.QComboBox()
+            self.nbdrop3.addItems(self.il6info[2:4])
+            self.tab4.layout3.addWidget(self.nbdrop3,i+1,2)  
+            self.il6 = QtWidgets.QLineEdit("0.0",self)
+            self.il6s[i,2] = self.il6
+            self.tab4.layout3.addWidget(self.il6s[i,2],i+1,3)
+            self.il6s[i,3] = QtWidgets.QCheckBox("R",self)
+            self.tab4.layout3.addWidget(self.il6s[i,3],i+1,4)
+            self.il6s[i,4] = QtWidgets.QLineEdit("0.0",self)
+            self.tab4.layout3.addWidget(self.il6s[i,4],i+1,5)
             
+        self.tab4.setLayout(self.tab4.layout3)
         
+        #Creates fifth tab
+        self.tab5.layout3 = QGridLayout()
+
+        for i in range(self.regionbox.value()): #create default number of tables
+            self.il7 = QtWidgets.QLineEdit("0.0",self)
+            self.il7s[i,0] = self.il7
+            self.tab5.layout3.addWidget(self.il7s[i,0],i+1,0)
+            self.nbdrop4 = QtWidgets.QComboBox()
+            self.nbdrop4.addItems(self.il7info[:])
+            self.tab5.layout3.addWidget(self.nbdrop4,i+1,1)
+            for j in range(3):
+                self.il7 = QtWidgets.QLineEdit("0.0",self)
+                self.il7s[i,j+1] = self.il7
+                self.tab5.layout3.addWidget(self.il7s[i,j+1],i+1,j+2)
+            
+        self.tab5.setLayout(self.tab5.layout3)
+            
         # Add tabs to widget        
         self.layout3.addWidget(self.tabs)
         self.stack3.setLayout(self.layout3)
-        
+        ####################################################FUNCTIONS#######################################################
+        ###################################################################################################################
     def readplot(self): #OPENING AND READING FIGURE IN
         self.figure.clf()
 
@@ -301,10 +384,10 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
                   
     
     def ReadLOS(self): #OPENING LOS.DAT FILE TO READ COLUMN HEADERS
-        aband = ["bb","bf","ff"]
-        n2band = ["1+", "2+", "BH2", "LBH", "BH1", "WJ", "CY"]
-        o2band = ["SR"]
-        noband = ["beta", "gam", "del", "eps", "bp", "gp", "IR"]
+        self.aband = ["bb","bf","ff"]
+        self.n2band = ["1+", "2+", "BH2", "LBH", "BH1", "WJ", "CY"]
+        self.o2band = ["SR"]
+        self.noband = ["beta", "gam", "del", "eps", "bp", "gp", "IR"]
         datafile, __ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
         if datafile:
             datafile = str(datafile)
@@ -323,40 +406,78 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             for i in range(len(self.speclist)):
 
                 self.b = QtWidgets.QPushButton(self.speclist[i], self)
+                print(self.b.objectName())
                 self.bs[i] = self.b 
                 self.bs[i].setCheckable(True)
                 self.tab2.layout3.addWidget(self.bs[i],i+1, 0)
                 if len(self.speclist[i]) == 1:
                     for j in range(3): #making specific bands for atomic molecules (bf, bb, ff)
-                        self.c = QtWidgets.QCheckBox(self)
+                        self.c = QtWidgets.QCheckBox(self.aband[j])
                         self.cs[i,j] = self.c
-                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1,QtCore.Qt.AlignRight)
-                        self.tab2.layout3.addWidget(QLabel(aband[j]),i+1,j*2+2)
+                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1)
                 if len(self.speclist[i]) == 2 and "+" in self.speclist[i]: #making specific bands for atomic molecules (bf, bb, ff)
                      for j in range(3):
-                        self.c = QtWidgets.QCheckBox(self)
+                        self.c = QtWidgets.QCheckBox(self.aband[j])
                         self.cs[i,j] = self.c
-                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1,QtCore.Qt.AlignRight)
-                        self.tab2.layout3.addWidget(QLabel(aband[j]),i+1,j*2+2)
+                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1)
                 if "N2" in self.speclist[i]:
-                    for j in range(len(n2band)):
-                        self.c = QtWidgets.QCheckBox(self)
+                    for j in range(len(self.n2band)):
+                        self.c = QtWidgets.QCheckBox(self.n2band[j])
                         self.cs[i,j] = self.c
-                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1,QtCore.Qt.AlignRight)
-                        self.tab2.layout3.addWidget(QLabel(n2band[j]),i+1,j*2+2)
+                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1)
                 if "O2" in self.speclist[i]:
-                    for j in range(len(o2band)):
-                        self.c = QtWidgets.QCheckBox(self)
+                    for j in range(len(self.o2band)):
+                        self.c = QtWidgets.QCheckBox(self.o2band[j])
                         self.cs[i,j] = self.c
-                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1,QtCore.Qt.AlignRight)
-                        self.tab2.layout3.addWidget(QLabel(o2band[j]),i+1,j*2+2)
+                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1)
                 if "NO" in self.speclist[i]:
-                    for j in range(len(noband)):
-                        self.c = QtWidgets.QCheckBox(self)
+                    for j in range(len(self.noband)):
+                        self.c = QtWidgets.QCheckBox(self.noband[j])
                         self.cs[i,j] = self.c
-                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1,QtCore.Qt.AlignRight)
-                        self.tab2.layout3.addWidget(QLabel(noband[j]),i+1,j*2+2)        
-            
+                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1)
+
+    def regionchange(self):
+        count = self.regionbox.value() #tables want
+        print(count)
+        clayout = (self.tab4.layout3.count()-1)/6 #widgets have (includes spinbox)
+        print(clayout)
+        if count < clayout:
+            for k in range(6):
+                regionToRemove = self.tab4.layout3.itemAtPosition(clayout,k).widget()
+                regionToRemove.setParent(None)
+                self.tab4.layout3.removeWidget(regionToRemove)
+            for kk in range(5):
+                lineToRemove = self.tab5.layout3.itemAtPosition(clayout,kk).widget()
+                lineToRemove.setParent(None)
+                self.tab5.layout3.removeWidget(lineToRemove)              
+        elif count > clayout:
+            for j in range(2):
+                self.il6 = QtWidgets.QLineEdit("0.0",self)
+                self.il6s[count,j] = self.il6
+                self.tab4.layout3.addWidget(self.il6s[count,j],count,j)
+            self.nbdrop3 = QtWidgets.QComboBox()
+            self.nbdrop3.addItems(self.il6info[2:4])
+            self.tab4.layout3.addWidget(self.nbdrop3,count,2)  
+            self.il6 = QtWidgets.QLineEdit("0.0",self)
+            self.il6s[count,2] = self.il6
+            self.tab4.layout3.addWidget(self.il6s[count,2],count,3)
+            self.il6s[count,3] = QtWidgets.QCheckBox("R",self)
+            self.tab4.layout3.addWidget(self.il6s[count,3],count,4)
+            self.il6s[count,4] = QtWidgets.QLineEdit("0.0",self)
+            self.tab4.layout3.addWidget(self.il6s[count,4],count,5)
+                
+            self.il7 = QtWidgets.QLineEdit("0.0",self)
+            self.il7s[count,0] = self.il7
+            self.tab5.layout3.addWidget(self.il7s[count,0],count,0)
+            self.nbdrop4 = QtWidgets.QComboBox()
+            self.nbdrop4.addItems(self.il7info[:])
+            self.tab5.layout3.addWidget(self.nbdrop4,count,1)
+            for jj in range(3):
+                self.il7 = QtWidgets.QLineEdit("0.0",self)
+                self.il7s[count,jj+1] = self.il7
+                self.tab5.layout3.addWidget(self.il7s[count,jj+1],count,jj+2)
+            self.tab5.setLayout(self.tab5.layout3)
+        
     def checkemalll(self):
         if self.allcheck.isChecked():
             print("true true")
