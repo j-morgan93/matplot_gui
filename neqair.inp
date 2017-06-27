@@ -16,7 +16,7 @@ Line 1: Database path - if empty, looks for local DATABASES directory
 /share/apps/neqair/v15.0-prerelease/DATABASES
 -------------------------
 Line 2: Output type : a string of letters indicating one or more output files
-ILMS
+ILMS    
 
 Allowed input choices for line 2:
 (I)ntensity.out - write intensity vs. wavelength (high resolution)
@@ -31,3 +31,132 @@ Intensity_(S)canned.out - write the scanned intensity v. wavelength file
 --------------------------
 Line 3: State population method
 N Q L      1.
+
+Allowed input for Line 3:
+(B) Boltzmann
+(N) Non-Boltzmann followed by (optionally) non-boltzmann method and (required) absorption method.
+    Valid choices for method are:
+        (Q) Traditional QSS (adjusts ground state)
+        (T) Time derivative limited (adjusts slowest eigenvalue)
+        (R) Reaction residual limited (adds a reaction rate proportional to Boltzmann distribution)
+        (F) Flux limited (adds a term accounting for convection - most stable, recommended, default)
+    Valid choices for absorption method include:
+        (C) Constant escape factor, followed by the value
+        (L) Local Escape factor approximation, followed by a float for d
+        (F) Full local calculation, followed by a float for d
+        (N) Non-local radiation/QSS coupling
+(S) Saha (atoms only)
+(F) Input from File (file names pop-xxx-xxx)
+(A) Do not calculate state populations, instead read absorption/emission coefficients from files
+        ae.nnn.  The order in which to process the nnn files is obtained from LOS.dat
+If different settings are desired for molecules and atoms, include a second line for molecules
+
+--------------------------
+Line 4: Geometry
+ T
+
+Allowed input for Line 4:
+(T) Tangent Slab - calculate tangent slab heat flux
+(C) Spherical Cap - follow with two floats for Rnose and Shock Div
+(S) Shock Tube - follow with a float for tube diameter
+(L) Line of Sight - calculate radiance on line
+(B) Blackbody function (follow with float for temperature, otherwise uses Tt at first LOS point)
+(P) Calculate Populations only (requires P output, Line 2)
+(X) Perform scan on existing intensity.out (S must be selected on Line 2)
+
+--------------------------
+Line 5: Boundary Conditions
+ N
+ B
+
+First line is boundary at LOS point 0. Options are:
+(B) Blackbody
+(I) read Intensity.in
+(N) no initial radiance
+
+Second line is boundary at final LOS point
+(I) read emissivity.in
+(G) Greybody, follow with Emittance/Absorbance (0-1.0) and Transmittance (0-1.0)
+(B) Blackbody (at final LOS point temperature)
+Note this boundary condition is used to convert data into an absorbed heat flux/radiance
+Use 'B' if only the incident radiance/flux is desired
+This value does however, materially affect the calculation for Non-local populations
+
+--------------------------
+Line 6: Bands
+I
+N       
+O       
+ N2+ 1-  
+ N2 1+   
+ N2 2+   
+ NO beta 
+ NO gam  
+ NO del  
+ NO eps  
+ O2 SR   
+
+Allowed input:
+(A) Include all bands/features that match species list
+(O) Omit selected bands or features
+(I) Include only selected bands or features
+
+If (O) or (I) is selected, follow with the following (optionally on separate lines):
+N, O, C, H, He, Ar, Fe, Al, Cr, Cu, K, Mg, Na, Ni, S, Si - available atoms
+N2, N2+, NO, O2, CN, CO, C2, H2, NH, CH, CO2, C3, MgO, SiO - available molecules
+
+For atoms, can optionally follow with bf,bb, and/or ff
+For molecules, the following band choices can be included
+N2 - 1+, 2+, BH2, LBH, BH1, WJ, CY
+NO - beta, gam, del, eps, bp, gp, IR
+CN - VIO, RED, IR
+H2 - B-X, C-X, B'-X
+CO - 4+, IR
+OH - A-X, IR
+MgO - B-X, B-A
+SiO - X-A, A-E
+
+---------------------------
+Line 7: Regions
+   855.50  2000.00 A 10 R 600
+  2000.00  6350.00 A 10 R 50
+  6350.00 16000.00 A 10 R 50
+ 16000.00 39600.00 A 10 R 25
+
+A series of lines specifying the region parameters.  This includes:
+w1 w2 A/M n Rdd
+w1, w2 are wavelength range in Angstrom
+A/M is (A)uto or (M)anual Grid Spacing.  This is followed by n, which is:
+Grid Spacing (Angstroms) for Manual or
+Points per Line for Auto
+The next parameter is an optional "Range", with dd being the range value
+
+----------------------------
+Line 8 : Scan (Only required if S selected on Line2)
+ 0.10  Voigt 6.000 0.000      2.
+ 0.10  Voigt 6.000 0.000      2.
+ 0.10  Voigt 6.000 0.000      2.
+ 0.10  Voigt 6.000 0.000      2.
+
+Which follows the format:
+Sp Type Param-list
+where Sp is the line spacing (float)
+Type is the scan type (ICCD1, ICCD2, Voigt, SGauss)
+Param-list is a list of scan parameterizations, generally is 2 or 3 float values
+
+----------------------------
+Line 9 : Spatial Scan (Optional - ShockTube mode only)
+tri 1.0
+ICCD1 1.0 0.1
+1.0
+
+Which follows the format:
+Spatial Scan is the convolution of 3 functions, each specified on consecutive lines
+1st line: Optical Function (trap)ezoid or (tri)angular, followed by one or two floats specifying base widths
+2nd line: CCD Function: Same options as Scan (Line 8)
+3rd line: Temporal Function: Treated as a square, float specifies widths
+
+If this line is present, LOS.out will be the convolution of the true result with this function
+If this line is missing, LOS.out will not be convolved
+
+To use a different SRF for each region, repeat these 3 lines N times
