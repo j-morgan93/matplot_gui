@@ -60,7 +60,7 @@ class Window(QMainWindow):
     def openFileNameDialog(self): #MASTER READ CAPABILITY
         name, _ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*);;Input Files (*.inp)")
         if name:
-            count=0
+            
             line_num=0
             l_input = {}
             input_text = open(name).read()
@@ -72,20 +72,23 @@ class Window(QMainWindow):
                     line1 = input_line.readLine()
                     if "Line" in line1:
                         line1= input_line.readLine()
+                        count=0
                         while re.match('(.)',line1) is not None:
                             l_input['Line'+str(line_num),count]=line1
                             line1= input_line.readLine()
-                            print(l_input['Line'+str(line_num),count])
                             count+=1
                         line_num+=1
-                        
+            temp =l_input['Line0',3]
+            del l_input['Line0',1]
+            del l_input['Line0',2]
+            del l_input['Line0',3]
+            l_input['Line0',0] = temp
             print(l_input)
-
           
     def helpFileDialog(self):
         self.helpfile = MyHelpWidget(self)
         
- 
+        
     def saveFileDialog(self):   #MASTER WRITE CAPABILITY
         name = QFileDialog.getSaveFileName(self,"Save File","","All Files (*);;Input Files (*.inp)")
         f = open(name[0], 'w')
