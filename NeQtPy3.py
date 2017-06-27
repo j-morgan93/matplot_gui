@@ -2,11 +2,11 @@
 """
 Created on Sat Jun 24 10:03:22 2017
 
-@author: Jonathan
+@author: Jonathan Morgan
 """
 
 import sys
-
+import re
 from PyQt5 import QtGui, QtWidgets, QtCore
 from PyQt5.QtWidgets import QWidget, QFormLayout, QStackedWidget, QListWidget, QApplication, QLineEdit, QRadioButton, QCheckBox, QLabel, QAction, qApp, QMainWindow, QInputDialog, QFileDialog, QGridLayout
 
@@ -57,17 +57,37 @@ class Window(QMainWindow):
         self.setCentralWidget(self.content)
         self.show()
         
-    def openFileNameDialog(self):
-        name, _ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
+    def openFileNameDialog(self): #MASTER READ CAPABILITY
+        name, _ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*);;Input Files (*.inp)")
         if name:
-            print(name)
-            
+            count=0
+            line_num=0
+            l_input = {}
+            input_text = open(name).read()
+            ba = QtCore.QByteArray(input_text.encode('utf-8'))
+            input_line = QtCore.QTextStream(ba)
+            while input_line.atEnd()==False:
+                line1 = input_line.readLine()
+                if "---" in line1:
+                    line1 = input_line.readLine()
+                    if "Line" in line1:
+                        line1= input_line.readLine()
+                        while re.match('(.)',line1) is not None:
+                            l_input['Line'+str(line_num),count]=line1
+                            line1= input_line.readLine()
+                            print(l_input['Line'+str(line_num),count])
+                            count+=1
+                        line_num+=1
+                        
+            print(l_input)
+
+          
     def helpFileDialog(self):
         self.helpfile = MyHelpWidget(self)
         
  
     def saveFileDialog(self):   #MASTER WRITE CAPABILITY
-        name = QFileDialog.getSaveFileName(self,"Save File","","All Files (*);;Text Files (*.txt)")
+        name = QFileDialog.getSaveFileName(self,"Save File","","All Files (*);;Input Files (*.inp)")
         f = open(name[0], 'w')
         f.write("15.0\n")
         f.write("----\n")
@@ -138,7 +158,6 @@ class Window(QMainWindow):
                             if self.content.cs[i,j].isChecked() == True:
                                 f.write(self.content.o2band[j]+" ")
                         f.write("\n")
-        f.write("\n")
         f.write("----\n")
         for i in range(self.content.regionbox.value()):
             if self.content.il6s[i,0].text() != "0.0":
@@ -200,9 +219,6 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.setGeometry(10, 10, 10, 10)
         self.setWindowTitle('StackedWidget demo')
         self.show()
-        
-    def openFileNameDialog(self):
-        name, _ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
         
     def stack1UI(self): #THE PLOTTING CAPABILITY
         
@@ -296,7 +312,6 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             self.il2 = QtWidgets.QCheckBox(self.il2info[i],self)
             self.il2s[i] = self.il2
             self.tab1.layout3.addWidget(self.il2s[i],i+1,0)
-            #self.tab1.layout3.addWidget(QLabel(il2info[i]),i+1,1)
             if "(I)" in self.il2info[i] or "(S)" in self.il2info[i]:
                 self.il2 = QtWidgets.QCheckBox("Column Format?",self)
                 self.il2s[i] = self.il2
@@ -514,6 +529,7 @@ class MyHelpWidget(QWidget):
         text_edit = QtWidgets.QPlainTextEdit()
         text=open('help.txt').read()
         text_edit.setPlainText(text)
+        self.show()
        
 def main():
     app = QApplication(sys.argv)
