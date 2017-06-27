@@ -34,10 +34,10 @@ class Window(QMainWindow):
         saveAction.setShortcut('Ctrl+S')                        
         saveAction.setStatusTip('Save File')   
         saveAction.triggered.connect(self.saveFileDialog)
-        #helpAction = QAction('&Help', self)
-        #helpAction.setShortcut('Ctrl+H')                        
-        #helpAction.setStatusTip('Help')   
-        #helpAction.triggered.connect(self.helpFileDialog)
+        helpAction = QAction('&Help', self)
+        helpAction.setShortcut('Ctrl+H')                        
+        helpAction.setStatusTip('Help')   
+        helpAction.triggered.connect(self.helpFileDialog)
         self.statusBar()                                       
 
         menubar = self.menuBar()                                
@@ -47,10 +47,12 @@ class Window(QMainWindow):
         fileMenu.addAction(exitAction)
         fileMenu.addAction(openAction)
         fileMenu.addAction(saveAction)
+        fileMenu.addAction(helpAction)
         toolbar = self.addToolBar('Exit')
         toolbar.addAction(exitAction)
         toolbar.addAction(openAction)
         toolbar.addAction(saveAction)
+        toolbar.addAction(helpAction)
         self.content = Widgettown(self)
         self.setCentralWidget(self.content)
         self.show()
@@ -60,14 +62,13 @@ class Window(QMainWindow):
         if name:
             print(name)
             
-    #def helpFileDialog(self):
-        #self.helpfile = MyHelpWidget(self)
+    def helpFileDialog(self):
+        self.helpfile = MyHelpWidget(self)
         
  
     def saveFileDialog(self):   #MASTER WRITE CAPABILITY
         name = QFileDialog.getSaveFileName(self,"Save File","","All Files (*);;Text Files (*.txt)")
         f = open(name[0], 'w')
-        #print(self.content.speclist)
         f.write("15.0\n")
         f.write("----\n")
         for i in range(len(self.content.il2s)):
@@ -96,7 +97,6 @@ class Window(QMainWindow):
                     data = data[data.find("(")+1:data.find(")")].split()[0]
                     f.write(" "+data)
                     f.write("\n")
-                #    f.write(data)
         f.write("\n\n")
         f.write("----\n")
         for i in range(len(self.content.il4s)):
@@ -139,16 +139,34 @@ class Window(QMainWindow):
                                 f.write(self.content.o2band[j]+" ")
                         f.write("\n")
         f.write("\n")
-        f.write("----\n")\
-        for i in range(len(self.content.il6s)):
-            if self.content.il6s[i].isChecked() == True:
-                data = self.content.il5info[i]
-                data = data[data.find("(")+1:data.find(")")].split()[0]
-                f.write(data)
+        f.write("----\n")
+        for i in range(self.content.regionbox.value()):
+            if self.content.il6s[i,0].text() != "0.0":
+                for j in range(2):
+                    dataw1w2 = self.content.il6s[i,j].text()
+                    f.write(dataw1w2+" ")
+                ind = self.content.nbdrop3.currentIndex()
+                datanb = self.content.nbdrop3.itemText(ind)
+                dataam = self.content.il6s[i,2].text()
+                if self.content.il6s[i,3].isChecked() == True:
+                    f.write(datanb+" "+dataam+" R "+self.content.il6s[i,4].text())
+                
+        f.write("\n\n")
+        f.write("----\n")
+        for i in range(self.content.regionbox.value()):
+            if self.content.il6s[i,0].text() != "0.0":    
+                datal71 = self.content.il7s[i,j].text()
+                ind = self.content.nbdrop4.currentIndex()
+                line_s = self.content.nbdrop4.itemText(ind)
+                f.write(datal71+" "+line_s)
+                for j in range(3):
+                    datal72 = self.content.il7s[i,j].text()
+                    f.write(" "+datal72)
         f.write("\n\n")
         f.write("----\n")
         f.close()
-        
+        ## try actually writing all of the variables out first and then format one f.write function
+        ##this may cut down on the cost of the things.
         
 class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
     def __init__(self, parent):
@@ -490,17 +508,17 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
     def display(self,i):
         self.Stack.setCurrentIndex(i)
         
-#class MyHelpWidget(QWidget):        
-   #def __init__(self, parent):   
-    #    super(QWidget, self).__init__(parent)
-     #   text_edit = QtWidgets.QPlainTextEdit()
-      #  text=open('help.txt').read()
-       # text_edit.setPlainText(text)
+class MyHelpWidget(QWidget):        
+   def __init__(self, parent):   
+        super(QWidget, self).__init__(parent)
+        text_edit = QtWidgets.QPlainTextEdit()
+        text=open('help.txt').read()
+        text_edit.setPlainText(text)
        
 def main():
     app = QApplication(sys.argv)
     ex = Window()
-    ex.setWindowTitle('NeQtPy')
+    ex.setWindowTitle('NeQtPy v0.1')
     sys.exit(app.exec_())
         
 if __name__ == '__main__':
