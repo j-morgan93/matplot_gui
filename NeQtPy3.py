@@ -83,8 +83,8 @@ class Window(QMainWindow):
             del l_input['Line0',2]
             del l_input['Line0',3]
             l_input['Line0',0] = temp
-            print(l_input)
-          
+
+##should probably create a function that handles the dictionary and           
     def helpFileDialog(self):
         self.helpfile = MyHelpWidget(self)
         
