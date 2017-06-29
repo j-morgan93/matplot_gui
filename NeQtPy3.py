@@ -507,7 +507,10 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         
     def checkemalll(self):
         if self.allcheck.isChecked():
-            self.il['Line6CB'][0,1].setChecked(True) #expand this to the rest of the check boxes
+            for i in range(len(self.speclist)):
+                for j in range(len(self.n2band)):
+                    if hasattr(self.il['Line6CB'][i,j],'setChecked'):
+                        self.il['Line6CB'][i,j].setChecked(True) #expand this to the rest of the check boxes
             
     def clearplot(self):
         self.figure.clf()
