@@ -94,8 +94,8 @@ class Window(QMainWindow):
         f = open(name[0], 'w')
         f.write("15.0\n")
         f.write("----\n")
-        for i in range(len(self.content.il2s)):
-            if self.content.il2s[i].isChecked() == True:
+        for i in range(len(self.content.il.get('Line2'))):
+            if self.content.il['Line2',i].isChecked() == True:
                 data = self.content.il2info[i]
                 data = data[data.find("(")+1:data.find(")")].split()[0]
                 f.write(data)
@@ -104,8 +104,8 @@ class Window(QMainWindow):
                     f.write(data)
         f.write("\n\n")
         f.write("----\n")
-        for i in range(len(self.content.il3s)):
-            if self.content.il3s[i].isChecked() == True:
+        for i in range(len(self.content.il)):
+            if self.content.il[i].isChecked() == True:
                 data = self.content.il3info[i]
                 data = data[data.find("(")+1:data.find(")")].split()[0]
                 f.write(data)
@@ -245,7 +245,6 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         layout.addWidget(self.button)
         layout.addWidget(self.button2)
         self.stack1.setLayout(layout)
-
         
     def stack2UI(self): #THE LOS DATA CAPABILITY
         layout = QGridLayout()
@@ -287,12 +286,7 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.il6info = ["WL1","WL2","A","M","Delta","R","dd"]
         self.il7info = ["ICCD1","ICCD2","Voigt","Gauss"]
         #create the dictionaries to place the widgets within for each tab.
-        self.il2s = {}
-        self.il3s = {}
-        self.il4s = {}
-        self.il5s = {}
-        self.il6s = {}
-        self.il7s = {}
+        self.il = {}
         
         self.layout3 = QtWidgets.QVBoxLayout(self)
         self.tabs = QtWidgets.QTabWidget() #create the tabs
@@ -301,123 +295,158 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.tab3 = QWidget()
         self.tab4 = QWidget()
         self.tab5 = QWidget()
+        self.tab6 = QWidget()
         
         self.tabs.addTab(self.tab1,"File Setup") # Add tabs
         self.tabs.addTab(self.tab2,"Species Information")
         self.tabs.addTab(self.tab3,"Geometry \& Boundary Conditions")
         self.tabs.addTab(self.tab4,"Regions")
-        self.tabs.addTab(self.tab5,"Line Style")
+        self.tabs.addTab(self.tab5,"Scan Style")
+        self.tabs.addTab(self.tab6,"Spatial Scan")
+        
         
        # Create first tab - Generic File information (sim type and such)
         self.tab1.layout3 = QGridLayout()      
         count = 0
+        tmp_arr = np.empty(shape=(len(self.il2info),2),dtype=object)
         for i in range(7): #INPUT LINE 2
-            self.il2 = QtWidgets.QCheckBox(self.il2info[i],self)
-            self.il2s[i] = self.il2
-            self.tab1.layout3.addWidget(self.il2s[i],i+1,0)
+            tmp_arr[i,0] = QtWidgets.QCheckBox(self.il2info[i],self)    
+            self.tab1.layout3.addWidget(tmp_arr[i,0],i+1,0)
             if "(I)" in self.il2info[i] or "(S)" in self.il2info[i]:
-                self.il2 = QtWidgets.QCheckBox("Column Format?",self)
-                self.il2s[i] = self.il2
-                self.tab1.layout3.addWidget(self.il2s[i],i+1,2,QtCore.Qt.AlignRight)
+                tmp_arr[i,1] = QtWidgets.QCheckBox("Column Format?",self)
+                self.tab1.layout3.addWidget(tmp_arr[i,1],i+1,2,QtCore.Qt.AlignRight)
                 count+=1                
-            count+=1          
-        for i in range(2): #INPUT LINE 3
-            self.il3 = QtWidgets.QCheckBox(self.il3info[i],self)
-            self.il3s[i] = self.il3
-            self.tab1.layout3.addWidget(self.il3s[i],count+i+1,0)
-            if "Non-B" in self.il3info[i]:
-                self.nbdrop1 = QtWidgets.QComboBox()
-                self.nbdrop1.addItem("--optional--")
-                self.nbdrop1.addItems(self.il3info[2:5])
-                self.nbdrop2 = QtWidgets.QComboBox()
-                self.nbdrop2.addItems(self.il3info[6:9])
-                self.tab1.layout3.addWidget(self.nbdrop1,count+i+1,2)
-                self.tab1.layout3.addWidget(self.nbdrop2,count+i+1,3)
-        for i in range(3):
-            self.il3 = QtWidgets.QCheckBox(self.il3info[i+10],self)
-            self.il3s[i+2] = self.il3
-            self.tab1.layout3.addWidget(self.il3s[i+2],count+i+3,0)
-            
+            count+=1   
+        self.il['Line2'] = tmp_arr #Creates the OutPut type dictionary section
+        print("created FileOutput")
+        tmp_arr = np.empty(shape=(5,3),dtype=object)
+        for i in range(5): #INPUT LINE 3
+            if i < 2:
+                tmp_arr[i,0] = QtWidgets.QCheckBox(self.il3info[i],self)
+                self.tab1.layout3.addWidget(tmp_arr[i,0],count+i+1,0)
+                if "Non-B" in self.il3info[i]: #Filling the combo boxes out and adding to dict
+                    tmp_arr[i,1] = QtWidgets.QComboBox()
+                    tmp_arr[i,1].addItem("--optional--")
+                    tmp_arr[i,1].addItems(self.il3info[2:5])
+                    tmp_arr[i,2] = QtWidgets.QComboBox()
+                    tmp_arr[i,2].addItems(self.il3info[6:9])
+                    self.tab1.layout3.addWidget(tmp_arr[i,1],count+i+1,2)
+                    self.tab1.layout3.addWidget(tmp_arr[i,2],count+i+1,3)
+            if i >= 2:
+                tmp_arr[i,0]= QtWidgets.QCheckBox(self.il3info[i+8],self)
+                self.tab1.layout3.addWidget(tmp_arr[i,0],count+i+1,0)
         self.tab1.setLayout(self.tab1.layout3)
-       
-        # Create second tab
+        self.il['Line3'] = tmp_arr #creates the State Pop Method Dictionary section
+        print("created State Population")
+
+        #---- Create second tab
         self.tab2.layout3 = QGridLayout()
         self.losopen = QtWidgets.QPushButton("Read LOS")
         self.losopen.clicked.connect(self.ReadLOS) #define the button's functionality
         self.tab2.layout3.addWidget(self.losopen,0,0)
         self.tab2.setLayout(self.tab2.layout3)
         
-        #Create third tab
+        #---- Create third tab
         self.tab3.layout3 = QGridLayout()
         self.tab3.layout3.addWidget(QLabel("GEOMETRY"),0,0,QtCore.Qt.AlignTop)
         self.tab3.layout3.addWidget(QLabel("BOUNDARY CONDITIONS"),0,1,QtCore.Qt.AlignTop)
+        tmp_arr = np.empty(shape=(len(self.il4info),1),dtype=object)
         for i in range(len(self.il4info)): #INPUT LINE 4
-            self.il4 = QtWidgets.QCheckBox(self.il4info[i],self)
-            self.il4s[i] = self.il4
-            self.tab3.layout3.addWidget(self.il4s[i],count+i+2,0)
+            tmp_arr[i,0] = QtWidgets.QCheckBox(self.il4info[i],self)
+            self.tab3.layout3.addWidget(tmp_arr[i,0],count+i+2,0)
+        self.il['Line4'] = tmp_arr #creates the Geometry Section of the dictionary
+        tmp_arr = np.empty(shape=(len(self.il5info),1),dtype=object)
         for i in range(len(self.il5info)): #INPUT LINE 5
-            self.il5 = QtWidgets.QCheckBox(self.il5info[i],self)
-            self.il5s[i] = self.il5
-            self.tab3.layout3.addWidget(self.il5s[i],count+i+2,1)
+            tmp_arr[i,0] = QtWidgets.QCheckBox(self.il5info[i],self)
+            self.tab3.layout3.addWidget(tmp_arr[i,0],count+i+2,1)
+        self.il['Line5'] = tmp_arr #creates the Boundary Condition section of the dictionary
         self.tab3.setLayout(self.tab3.layout3)
+        print("created Boundary/Geometry")
        
-        #Create fourth tab
+        #---- Create fourth tab
         self.tab4.layout3 = QGridLayout()
         self.regionbox = QtWidgets.QSpinBox(self)
         self.regionbox.setValue(4)
-        self.tab4.layout3.addWidget(self.regionbox,0,2,1,2)
+        self.tab4.layout3.addWidget(self.regionbox,0,0,1,6)
         self.regionbox.valueChanged.connect(self.regionchange)
-        for i in range(self.regionbox.value()): #create default number of tables
-            for j in range(2):
-                self.il6 = QtWidgets.QLineEdit("0.0",self)
-                self.il6s[i,j] = self.il6
-                self.tab4.layout3.addWidget(self.il6s[i,j],i+1,j)
-            self.nbdrop3 = QtWidgets.QComboBox()
-            self.nbdrop3.addItems(self.il6info[2:4])
-            self.tab4.layout3.addWidget(self.nbdrop3,i+1,2)  
-            self.il6 = QtWidgets.QLineEdit("0.0",self)
-            self.il6s[i,2] = self.il6
-            self.tab4.layout3.addWidget(self.il6s[i,2],i+1,3)
-            self.il6s[i,3] = QtWidgets.QCheckBox("R",self)
-            self.tab4.layout3.addWidget(self.il6s[i,3],i+1,4)
-            self.il6s[i,4] = QtWidgets.QLineEdit("0.0",self)
-            self.tab4.layout3.addWidget(self.il6s[i,4],i+1,5)
-            
-        self.tab4.setLayout(self.tab4.layout3)
         
-        #Creates fifth tab
-        self.tab5.layout3 = QGridLayout()
-
+        tmp_arr = np.empty(shape=(self.regionbox.value(),6),dtype=object)
         for i in range(self.regionbox.value()): #create default number of tables
-            self.il7 = QtWidgets.QLineEdit("0.0",self)
-            self.il7s[i,0] = self.il7
-            self.tab5.layout3.addWidget(self.il7s[i,0],i+1,0)
-            self.nbdrop4 = QtWidgets.QComboBox()
-            self.nbdrop4.addItems(self.il7info[:])
-            self.tab5.layout3.addWidget(self.nbdrop4,i+1,1)
+            for j in range(6):
+                if j<2 or j ==3 or j == 5:
+                    tmp_arr[i,j] = QtWidgets.QLineEdit("0.0",self)
+                    self.tab4.layout3.addWidget(tmp_arr[i,j],i+1,j)
+                    print(i,j,self.tab4.layout3.count())
+                if j ==2:
+                    tmp_arr[i,j] = QtWidgets.QComboBox()
+                    tmp_arr[i,j].addItems(self.il6info[2:4])
+                    self.tab4.layout3.addWidget(tmp_arr[i,j],i+1,j)
+                    print(i,j,self.tab4.layout3.count())
+                if j ==4:
+                    tmp_arr[i,j] = QtWidgets.QCheckBox("R",self)
+                    self.tab4.layout3.addWidget(tmp_arr[i,j],i+1,j)
+                    print(i,j,self.tab4.layout3.count())
+        self.il['Line7'] = tmp_arr #creates the Regions section of the dictionary
+        self.tab4.setLayout(self.tab4.layout3)
+        print("created Regions")
+        
+        #---- Creates fifth tab
+        self.tab5.layout3 = QGridLayout()
+        tmp_arr1 = np.empty(shape=(self.regionbox.value(),5),dtype=object)
+        for i in range(self.regionbox.value()): #create default number of tables...too
+            tmp_arr1[i,0] = QtWidgets.QLineEdit("0.0",self)
+            self.tab5.layout3.addWidget(tmp_arr1[i,0],i+1,0)
+            tmp_arr1[i,1] = QtWidgets.QComboBox()
+            tmp_arr1[i,1].addItems(self.il7info[:])
+            self.tab5.layout3.addWidget(tmp_arr1[i,1],i+1,1)
             for j in range(3):
-                self.il7 = QtWidgets.QLineEdit("0.0",self)
-                self.il7s[i,j+1] = self.il7
-                self.tab5.layout3.addWidget(self.il7s[i,j+1],i+1,j+2)
-            
+                tmp_arr1[i,j+2] = QtWidgets.QLineEdit("0.0",self)
+                self.tab5.layout3.addWidget(tmp_arr1[i,j+2],i+1,j+2)
+        self.il['Line8'] = tmp_arr1  #creates the Scan portion of the dictionary. only required for shock tube
         self.tab5.setLayout(self.tab5.layout3)
-            
+        print("created Scan")
+        
+        #---- Creates sixth tab
+        self.tab6.layout3 = QGridLayout()
+        tmp_arr1 = np.empty(shape=(self.regionbox.value(),3),dtype=object)
+        
+        tmp_arr1[0,0] = QtWidgets.QComboBox()
+        tmp_arr1[0,0].addItem('Triangle')
+        tmp_arr1[0,0].addItem('Trapezoid')
+        self.tab6.layout3.addWidget(tmp_arr1[0,0],0,0)
+        tmp_arr1[0,1] = QtWidgets.QLineEdit("0.0",self)
+        self.tab6.layout3.addWidget(tmp_arr1[0,1],0,1)
+        tmp_arr1[0,2] = QtWidgets.QLineEdit("0.0",self)
+        self.tab6.layout3.addWidget(tmp_arr1[0,2],0,2)
+        tmp_arr1[1,0] = QtWidgets.QComboBox()
+        tmp_arr1[1,0].addItems(self.il7info[:])
+        self.tab6.layout3.addWidget(tmp_arr1[1,0],1,0)
+        tmp_arr1[1,1] = QtWidgets.QLineEdit("0.0",self)
+        self.tab6.layout3.addWidget(tmp_arr1[1,1],1,1)
+        tmp_arr1[1,2] = QtWidgets.QLineEdit("0.0",self)
+        self.tab6.layout3.addWidget(tmp_arr1[1,2],1,2)
+        tmp_arr1[2,0] = QtWidgets.QLineEdit("0.0",self)
+        self.tab6.layout3.addWidget(tmp_arr1[2,0],2,0)
+        self.il['Line9'] = tmp_arr1  #creates the Scan portion of the dictionary. only required for shock tube
+        self.tab6.setLayout(self.tab6.layout3)
+        print("created Spatial Scan")
+        
         # Add tabs to widget        
         self.layout3.addWidget(self.tabs)
         self.stack3.setLayout(self.layout3)
+        del tmp_arr, tmp_arr1
+        
         ####################################################FUNCTIONS#######################################################
         ###################################################################################################################
     def readplot(self): #OPENING AND READING FIGURE IN
         self.figure.clf()
-
         datafile, __ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
         if datafile:
             datafile = str(datafile)
             spectrum =np.genfromtxt(datafile,dtype=float,comments = "(",skip_header=1,names=True,unpack=True)
             sax = self.figure.add_subplot(111)
             sax.plot(spectrum[spectrum.dtype.names[1]], spectrum[spectrum.dtype.names[2]], '*-') #need controls for one vs. another
-            self.canvas.draw()
-                  
+            self.canvas.draw()               
     
     def ReadLOS(self): #OPENING LOS.DAT FILE TO READ COLUMN HEADERS
         self.aband = ["bb","bf","ff"]
@@ -428,96 +457,102 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         if datafile:
             datafile = str(datafile)
             spectrum =np.genfromtxt(datafile,dtype=None,skip_header=21,names=True)
-            self.speclist = spectrum.dtype.names[7:-1]#omitting all of the n, n_total stuff
-            self.speclist = [w.replace('_1','+') for w in self.speclist] #erasing the nasty characters and replacing with user-identifiables
-            self.speclist.sort() #sort the list
-            self.bs = {}  #create dictionary (jus so I can later call on values?)
-            self.cs = {}
+            self.spec = spectrum.dtype.names[7:-1]#omitting all of the n, n_total stuff
+            self.spec = [w.replace('_1','+') for w in self.spec] #erasing the nasty characters and replacing with user-identifiables
+            self.spec.sort() #sort the list
+            
+            #################### This next little piece of code is dumb and inefficient, should replace with something more elegant
+            xcount=0
+            for i in range(len(self.spec)):
+                if "+" not in self.spec[i]:
+                    xcount+=1
+            self.speclist = [None]*xcount
+            k = 0
+            for i in range(len(self.spec)):
+                if "+" not in self.spec[i]:           
+                    self.speclist[k] = self.spec[i]
+                    k+=1
+            ###################
             self.allcheck = QtWidgets.QCheckBox()
             self.allcheck.clicked.connect(self.checkemalll)    
             self.tab2.layout3.addWidget(self.allcheck,0,1)
             self.tab2.layout3.addWidget(QLabel("Check All Bands"),0,2,1,7,QtCore.Qt.AlignLeft)
+
+            tmp_arrb = [None]*len(self.speclist)
+            tmp_arrcb = np.empty(shape=(xcount,len(self.n2band)),dtype=object)
+            for i in range(len(self.speclist)):                                        
+                    tmp_arrb[i] = QtWidgets.QPushButton(self.speclist[i], self)
+                    tmp_arrb[i].setCheckable(True)
+                    self.tab2.layout3.addWidget(tmp_arrb[i],i+1, 0)
+                    
+                    if len(self.speclist[i]) == 1:
+                        for j in range(3): #making specific bands for atoms (bf, bb, ff)
+                            tmp_arrcb[i,j] = QtWidgets.QCheckBox(self.aband[j])
+                            self.tab2.layout3.addWidget(tmp_arrcb[i,j],i+1,j*2+1)
+                    if "N2" in self.speclist[i] and len(self.speclist[i]) == 2:
+                        for j in range(len(self.n2band)):
+                            tmp_arrcb[i,j] = QtWidgets.QCheckBox(self.n2band[j])
+                            self.tab2.layout3.addWidget(tmp_arrcb[i,j],i+1,j*2+1)
+                    if "O2" in self.speclist[i] and len(self.speclist[i]) == 2:
+                        for j in range(len(self.o2band)):
+                            tmp_arrcb[i,j] = QtWidgets.QCheckBox(self.o2band[j])
+                            self.tab2.layout3.addWidget(tmp_arrcb[i,j],i+1,j*2+1)
+                    if "NO" in self.speclist[i] and len(self.speclist[i]) == 2:
+                        for j in range(len(self.noband)):
+                            tmp_arrcb[i,j] = QtWidgets.QCheckBox(self.noband[j])
+                            self.tab2.layout3.addWidget(tmp_arrcb[i,j],i+1,j*2+1)
+                    xcount+=1
+            self.il['Line6'] = tmp_arrb # The press buttons for each species
+            self.il['Line6CB'] = tmp_arrcb # the check buttons for each species
             
-            #self.allcheck.connect(self.CheckAll) add the check all features!!!!!!!!
-            for i in range(len(self.speclist)):
-
-                self.b = QtWidgets.QPushButton(self.speclist[i], self)
-                print(self.b.objectName())
-                self.bs[i] = self.b 
-                self.bs[i].setCheckable(True)
-                self.tab2.layout3.addWidget(self.bs[i],i+1, 0)
-                if len(self.speclist[i]) == 1:
-                    for j in range(3): #making specific bands for atomic molecules (bf, bb, ff)
-                        self.c = QtWidgets.QCheckBox(self.aband[j])
-                        self.cs[i,j] = self.c
-                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1)
-                if len(self.speclist[i]) == 2 and "+" in self.speclist[i]: #making specific bands for atomic molecules (bf, bb, ff)
-                     for j in range(3):
-                        self.c = QtWidgets.QCheckBox(self.aband[j])
-                        self.cs[i,j] = self.c
-                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1)
-                if "N2" in self.speclist[i]:
-                    for j in range(len(self.n2band)):
-                        self.c = QtWidgets.QCheckBox(self.n2band[j])
-                        self.cs[i,j] = self.c
-                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1)
-                if "O2" in self.speclist[i]:
-                    for j in range(len(self.o2band)):
-                        self.c = QtWidgets.QCheckBox(self.o2band[j])
-                        self.cs[i,j] = self.c
-                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1)
-                if "NO" in self.speclist[i]:
-                    for j in range(len(self.noband)):
-                        self.c = QtWidgets.QCheckBox(self.noband[j])
-                        self.cs[i,j] = self.c
-                        self.tab2.layout3.addWidget(self.cs[i,j],i+1,j*2+1)
-
     def regionchange(self):
         count = self.regionbox.value() #tables want
-        print(count)
-        clayout = (self.tab4.layout3.count()-1)/6 #widgets have (includes spinbox)
-        print(clayout)
+        clayout = int((self.tab4.layout3.count()-1)/6) #widgets have (includes spinbox)
+        print("count is: ",count,"clayout is: ",clayout)
         if count < clayout:
             for k in range(6):
+                self.il['Line7'][clayout-1,k] = None #the spacing is offset from that array loc by 1
                 regionToRemove = self.tab4.layout3.itemAtPosition(clayout,k).widget()
                 regionToRemove.setParent(None)
                 self.tab4.layout3.removeWidget(regionToRemove)
             for kk in range(5):
+                self.il['Line8'][clayout-1,kk] = None
                 lineToRemove = self.tab5.layout3.itemAtPosition(clayout,kk).widget()
                 lineToRemove.setParent(None)
                 self.tab5.layout3.removeWidget(lineToRemove)              
         elif count > clayout:
-            for j in range(2):
-                self.il6 = QtWidgets.QLineEdit("0.0",self)
-                self.il6s[count,j] = self.il6
-                self.tab4.layout3.addWidget(self.il6s[count,j],count,j)
-            self.nbdrop3 = QtWidgets.QComboBox()
-            self.nbdrop3.addItems(self.il6info[2:4])
-            self.tab4.layout3.addWidget(self.nbdrop3,count,2)  
-            self.il6 = QtWidgets.QLineEdit("0.0",self)
-            self.il6s[count,2] = self.il6
-            self.tab4.layout3.addWidget(self.il6s[count,2],count,3)
-            self.il6s[count,3] = QtWidgets.QCheckBox("R",self)
-            self.tab4.layout3.addWidget(self.il6s[count,3],count,4)
-            self.il6s[count,4] = QtWidgets.QLineEdit("0.0",self)
-            self.tab4.layout3.addWidget(self.il6s[count,4],count,5)
-                
-            self.il7 = QtWidgets.QLineEdit("0.0",self)
-            self.il7s[count,0] = self.il7
-            self.tab5.layout3.addWidget(self.il7s[count,0],count,0)
-            self.nbdrop4 = QtWidgets.QComboBox()
-            self.nbdrop4.addItems(self.il7info[:])
-            self.tab5.layout3.addWidget(self.nbdrop4,count,1)
-            for jj in range(3):
-                self.il7 = QtWidgets.QLineEdit("0.0",self)
-                self.il7s[count,jj+1] = self.il7
-                self.tab5.layout3.addWidget(self.il7s[count,jj+1],count,jj+2)
+            self.il['Line7'] = np.resize(self.il['Line7'],[count,len(self.il6info)-1])
+            for j in range(6):
+                if j<2 or j ==3 or j == 5:
+                    self.il['Line7'][count-1,j] = QtWidgets.QLineEdit("0.0",self)
+                    self.tab4.layout3.addWidget(self.il['Line7'][count-1,j],count,j)
+                if j ==2:
+                    self.il['Line7'][count-1,j] = QtWidgets.QComboBox()
+                    self.il['Line7'][count-1,j].addItems(self.il6info[2:4])
+                    self.tab4.layout3.addWidget(self.il['Line7'][count-1,j],count,j)
+                if j ==4:
+                    self.il['Line7'][count-1,j] = QtWidgets.QCheckBox("R",self)
+                    self.tab4.layout3.addWidget(self.il['Line7'][count-1,j],count,j)
+            self.tab4.setLayout(self.tab4.layout3)
+
+            self.il['Line8'] = np.resize(self.il['Line8'],[count,5])
+            self.il['Line8'][count-1,0] = QtWidgets.QLineEdit("0.0",self)
+            self.tab5.layout3.addWidget(self.il['Line8'][count-1,0],count,0)
+            self.il['Line8'][count-1,0] = QtWidgets.QComboBox()
+            self.il['Line8'][count-1,0].addItems(self.il7info[:])
+            self.tab5.layout3.addWidget(self.il['Line8'][count-1,0],count,1)
+            for j in range(3):
+                self.il['Line8'][count-1,j+2] = QtWidgets.QLineEdit("0.0",self)
+                self.tab5.layout3.addWidget(self.il['Line8'][count-1,j+2],count,j+2)
             self.tab5.setLayout(self.tab5.layout3)
         
     def checkemalll(self):
         if self.allcheck.isChecked():
-            print("true true")
-            self.cs[1,1].setChecked(True) #expand this to the rest of the check boxes
+            for i in range(len(self.speclist)):
+                self.il['Line6'][i].setChecked(True)
+                for j in range(len(self.n2band)):
+                    if hasattr(self.il['Line6CB'][i,j],'setChecked'):
+                        self.il['Line6CB'][i,j].setChecked(True)
             
     def clearplot(self):
         self.figure.clf()
