@@ -8,7 +8,8 @@ Created on Sat Jun 24 10:03:22 2017
 import sys
 import re
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QWidget, QFormLayout, QStackedWidget, QListWidget, QApplication, QLineEdit, QCheckBox, QLabel, QAction, qApp, QMainWindow, QInputDialog, QFileDialog, QGridLayout
+from PyQt5.QtWidgets import QWidget, QStackedWidget, QListWidget, QApplication,\
+ QLineEdit, QCheckBox, QLabel, QAction, QMainWindow, QFileDialog, QGridLayout
 
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -60,6 +61,7 @@ class Window(QMainWindow):
     def openFileNameDialog(self):  # MASTER READ CAPABILITY(AND POPULATE WIDGETS)
         name, _ = QFileDialog.getOpenFileName(self, "Open File", "", "All Files(*);;Input Files(*.inp)")
         if name:
+            # reading in the file then going to compare to existing dictionary keys
             print("Opening Input File:", name)
             line_num = 2
             l_input = {}
@@ -91,17 +93,19 @@ class Window(QMainWindow):
             # now going to compare the entries in the dictionary to buttons
         for i in range(2, 10, 1):  # starting from line 2
             if l_input['Line'+str(i)] is not None:
-                for m in range(len(l_input['Line'+str(i)])):
+                for m in range(len(l_input['Line'+str(i)])):  # for the range of the input line dictionary
                     for n in range(len(l_input['Line'+str(i)][m])):
                             print("COLUMNSSSS", 'Line'+str(i), l_input['Line'+str(i)][m, n])
-                            for g in range(len(self.content.il['Line'+str(i)])):
+                            for g in range(len(self.content.il['Line'+str(i)])):  # for the range of the exisiting dictionary and corresonding lines
                                 for h in range(len(self.content.il['Line'+str(i)][g])):
                                     if i != 6:
                                         if i == 3 and self.content.il['Line'+str(i)][1, 0].isChecked() is True:
-                                            if hasattr(self.content.il['Line'+str(i)][g, h], 'currentIndex') and "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].itemText():
+                                            if hasattr(self.content.il['Line'+str(i)][g, h], 'currentIndex')\
+                                            and "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].itemText():
                                                 print(l_input['Line'+str(i)][m, n], "trying to go in", self.content.il['Line'+str(i)][g, h].text())
                                                 self.content.il['Line'+str(i)][g, h].setChecked(True)
-                                        if hasattr(self.content.il['Line'+str(i)][g, h], 'setChecked') and "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].text():
+                                        if hasattr(self.content.il['Line'+str(i)][g, h], 'setChecked')\
+                                        and "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].text():
                                             print(l_input['Line'+str(i)][m, n], "trying to go in", self.content.il['Line'+str(i)][g, h].text())
                                             self.content.il['Line'+str(i)][g, h].setChecked(True)
 
@@ -119,7 +123,8 @@ class Window(QMainWindow):
                 /share/apps/neqair/v15.0-prerelease/DATABASES")
         for i in range(len(self.content.il['Line2'])):
             for j in range(2):
-                if hasattr(self.content.il['Line2'][i, j], 'setChecked') and self.content.il['Line2'][i, j].isChecked() is True:
+                if hasattr(self.content.il['Line2'][i, j], 'setChecked')\
+                and self.content.il['Line2'][i, j].isChecked() is True:
                     data = self.content.il['Line2'][i, j].text()
                     data = data[data.find("(")+1:data.find(")")].split()[0]
                     f.write(data)
@@ -128,11 +133,13 @@ class Window(QMainWindow):
         f.write("----\n")
         for i in range(len(self.content.il['Line3'])):
             for j in range(3):
-                if hasattr(self.content.il['Line3'][i, j], 'setChecked') and self.content.il['Line3'][i, j].isChecked() is True:
+                if hasattr(self.content.il['Line3'][i, j], 'setChecked')\
+                and self.content.il['Line3'][i, j].isChecked() is True:
                     data = self.content.il3info[i]
                     data = data[data.find("(")+1:data.find(")")].split()[0]
                     f.write(data)
-                    if "Non" in self.content.il['Line3'][i, j].text() and self.content.il['Line3'][i, j].isChecked() is True:
+                    if "Non" in self.content.il['Line3'][i, j].text()\
+                    and self.content.il['Line3'][i, j].isChecked() is True:
                         if self.content.il['Line3'][i,1].currentIndex() != 0:
                             ind = self.content.il['Line3'][i, 1].currentIndex()
                             data = self.content.il['Line3'][i, 1].itemText(ind)
@@ -147,7 +154,8 @@ class Window(QMainWindow):
         f.write("\n\n")
         f.write("----\n")
         for i in range(len(self.content.il['Line4'])):
-            if hasattr(self.content.il['Line4'][i, 0], 'setChecked') and self.content.il['Line4'][i, 0].isChecked() is True:
+            if hasattr(self.content.il['Line4'][i, 0], 'setChecked')\
+            and self.content.il['Line4'][i, 0].isChecked() is True:
                 data = self.content.il4info[i]
                 data = data[data.find("(")+1:data.find(")")].split()[0]
                 f.write(data)
@@ -155,7 +163,8 @@ class Window(QMainWindow):
         f.write("----\n")
         print("Geometry Written")
         for i in range(len(self.content.il['Line5'])):
-            if hasattr(self.content.il['Line5'][i, 0], 'setChecked') and self.content.il['Line5'][i, 0].isChecked() is True:
+            if hasattr(self.content.il['Line5'][i, 0], 'setChecked')\
+            and self.content.il['Line5'][i, 0].isChecked() is True:
                 data = self.content.il5info[i]
                 data = data[data.find("(")+1:data.find(")")].split()[0]
                 f.write(data)
@@ -163,7 +172,8 @@ class Window(QMainWindow):
         f.write("\n\n")
         f.write("----\n")
         for i in range(len(self.content.speclist)):
-            if hasattr(self.content.il['Line6'][i], 'setChecked') and self.content.il['Line6'][i].isChecked() is True:
+            if hasattr(self.content.il['Line6'][i], 'setChecked')\
+            and self.content.il['Line6'][i].isChecked() is True:
                 print("Writing", self.content.il['Line6'][i].text())
                 filedata =self.content.il['Line6'][i].text()
                 f.write(filedata)
@@ -193,14 +203,16 @@ class Window(QMainWindow):
         for i in range(self.content.regionbox.value()):
             if self.content.il['Line7'][i,0].text() != "0.0":
                 for j in range(len(self.content.il['Line7'][0, :])-1):
-                    if hasattr(self.content.il['Line7'][i, j], 'text') and not hasattr(self.content.il['Line7'][i, j], 'isChecked'):
+                    if hasattr(self.content.il['Line7'][i, j], 'text')\
+                    and not hasattr(self.content.il['Line7'][i, j], 'isChecked'):
                         dataw1w2 = self.content.il['Line7'][i, j].text()
                         f.write(" "+dataw1w2)
                     if hasattr(self.content.il['Line7'][i, j], 'currentIndex'):
                         ind = self.content.il['Line7'][i, j].currentIndex()
                         dataam = self.content.il['Line7'][i, j].itemText(ind)
                         f.write(" "+dataam)
-                    if hasattr(self.content.il['Line7'][i, j], 'isChecked') and self.content.il['Line7'][i, j].isChecked() is True:
+                    if hasattr(self.content.il['Line7'][i, j], 'isChecked')\
+                    and self.content.il['Line7'][i, j].isChecked() is True:
                         f.write(" R "+self.content.il['Line7'][i, j+1].text())
                 f.write("\n")
         print("Regions Written")
@@ -221,7 +233,7 @@ class Window(QMainWindow):
         f.write("\n")
         f.write("----\n")
         f.close()
-        # try actually writing all of the variables out first and then format one f.write function
+        # write all variables out first and then format one f.write function
         # this may cut down on the cost of the things.
 
 class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
@@ -232,7 +244,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.leftlist = QListWidget()
         self.leftlist.insertItem(0, 'Plots')
         self.leftlist.insertItem(1, 'Spectral Fit - Generate LOS file')
-        self.leftlist.insertItem(2, 'NEQAIR Simulation - Provide LOS and Write .inp')
+        self.leftlist.insertItem(2, 'NEQAIR Simulation Input')
 
         self.stack1 = QWidget()
         self.stack2 = QWidget()
@@ -270,15 +282,22 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         # some buttons for functionality
         self.button = QtWidgets.QPushButton('ReadPlot')
         self.button.clicked.connect(self.readplot)
-        self.button
+        self.colchange1 = QtWidgets.QComboBox()
+        self.colchange1.currentIndexChanged.connect(self.newplot)  # make new plot function
+        self.colchange2 = QtWidgets.QComboBox()
+        self.colchange2.currentIndexChanged.connect(self.newplot)  # make new plot function
         self.button2 = QtWidgets.QPushButton('ClearPlot')
         self.button2.clicked.connect(self.clearplot)
 
         layout = QtWidgets.QVBoxLayout()
+        glayout = QGridLayout()
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
-        layout.addWidget(self.button)
-        layout.addWidget(self.button2)
+        glayout.addWidget(self.button,0,0)
+        glayout.addWidget(self.button2,0,1)
+        glayout.addWidget(self.colchange1,1,0)
+        glayout.addWidget(self.colchange2,1,1)
+        layout.addLayout(glayout)
         self.stack1.setLayout(layout)
 
     def stack2UI(self):  # THE LOS DATA CAPABILITY
@@ -309,14 +328,22 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
 
     def stack3UI(self):  # THE NEQAIR MODEL INPUT CAPABILITY
     # TABS---------------------------------
-        self.il2info = ["(I)ntensity.out", "Intensity_(S)canned.out", "(L)OS.out", "(P)opulation", "(A)bsorbance/Emittance", "(C)oupling.out", 
-                        "(M) stdout"]
-        self.il3info = ["(B) Boltzmann", "(N) Non-Boltzmann", "(Q) Traditional QSS ", "(T) Time derivative limited", "(R) Reaction residual limited ", 
-                        "(F) Flux limited", "(C) Constant escape factor", "(L) Local Escape factor", "(F) Full local calculation", "(N) Non-local coupling", 
-                        "(S) Saha", "(F) Input from File", "(A) absorption/emission coefficients from File"]
-        self.il4info = ["(T) Tangent Slab", "(C) Spherical Cap", "(S) Shock Tube", "(L) Line of Sight", "(B) Blackbody", "(P) Calculate Populations", 
-                        "(X) Perform scan on existing intensity.out"]
-        self.il5info = ["(B) Blackbody", "(I) read Intensity.in", "(N) no initial radiance", "(I) read emissivity.in", "(G) Greybody", "(B) Blackbody"]
+        self.il2info = ["(I)ntensity.out", "Intensity_(S)canned.out",
+                        "(L)OS.out", "(P)opulation", "(A)bsorbance/Emittance",
+                        "(C)oupling.out", "(M) stdout"]
+        self.il3info = ["(B) Boltzmann", "(N) Non-Boltzmann",
+                        "(Q) Traditional QSS ", "(T) Time derivative limited",
+                        "(R) Reaction residual limited ", "(F) Flux limited",
+                        "(C) Constant escape factor", "(L) Local Escape factor",
+                        "(F) Full local calculation", "(N) Non-local coupling", 
+                        "(S) Saha", "(F) Input from File",
+                        "(A) absorption/emission coefficients from File"]
+        self.il4info = ["(T) Tangent Slab", "(C) Spherical Cap",
+                        "(S) Shock Tube", "(L) Line of Sight", "(B) Blackbody",
+                        "(P) Calculate Populations", "(X) Perform scan on existing intensity.out"]
+        self.il5info = ["(B) Blackbody", "(I) read Intensity.in",
+                        "(N) no initial radiance", "(I) read emissivity.in",
+                        "(G) Greybody", "(B) Blackbody"]
         self.il6info = ["WL1", "WL2", "A", "M", "Delta", "R", "dd"]
         self.il7info = ["ICCD1", "ICCD2", "Voigt", "Gauss"]
         # create the dictionaries to place the widgets within for each tab.
@@ -472,11 +499,23 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         datafile, __ = QFileDialog.getOpenFileName(self, "Open File", "", "All Files(*)")
         if datafile:
             datafile = str(datafile)
-            spectrum =np.genfromtxt(datafile, dtype=float, comments="(", skip_header=1, names=True, unpack=True)
-            sax = self.figure.add_subplot(111)
-            sax.plot(spectrum[spectrum.dtype.names[1]], spectrum[spectrum.dtype.names[2]], '*-')  # need controls for one vs. another
+            self.plotfile =np.genfromtxt(datafile, dtype=float, comments="(", skip_header=1, names=True, unpack=True)
+            sax = self.figure.add_subplot(111)  # adds figure as a subplot. might be nice to use this to allow user to plot multiple things.
+            sax.plot(self.plotfile[self.plotfile.dtype.names[0]], self.plotfile[self.plotfile.dtype.names[1]], '*-')  # need controls for one vs. another
+            self.colchange1.addItems(self.plotfile.dtype.names[:])
+            self.colchange2.addItems(self.plotfile.dtype.names[:])
             self.canvas.draw()
 
+    def newplot(self):
+        self.figure.clf()
+        sax = self.figure.add_subplot(111)  # adds figure as a subplot. might be nice to use this to allow user to plot multiple things.
+        i1 = self.colchange1.currentIndex()
+        i2 = self.colchange2.currentIndex()
+        sax.plot(self.plotfile[self.plotfile.dtype.names[i1]], self.plotfile[self.plotfile.dtype.names[i2]], '*-')
+        self.canvas.draw()
+        
+        
+        
     def ReadLOS(self):  # OPENING LOS.DAT FILE TO READ COLUMN HEADERS
         self.aband = ["bb", "bf", "ff"]
         self.n2band = ["1+", "2+", "BH2", "LBH", "BH1", "WJ", "CY"]
@@ -537,7 +576,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
 
     def regionchange(self):
         count = self.regionbox.value()  # tables want
-        clayout = int((self.tab4.layout3.count()-1)/6)  # widgets have(includes spinbox)
+        clayout = int((self.tab4.layout3.count()-1)/6)  # tables have(includes spinbox)
         print("count is: ", count, "clayout is: ", clayout)
         if count < clayout:
             for k in range(6):
