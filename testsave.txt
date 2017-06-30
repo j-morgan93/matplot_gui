@@ -1,3 +1,34 @@
+15.0
+----
+*
+Line 0: Header - anything between here and the ---'s writes to stdout
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa <- 1st format line
+--------------------------
+Line 1: Database path - if empty, looks for local DATABASES directory
+/share/apps/neqair/v15.0-prerelease/DATABASESI2S2L
+
+----
 N
-N+
-NO
+
+----
+T
+
+----
+B
+
+----
+N bb bf ff
+N2 1+ 2+ BH2 LBH BH1 WJ CY
+NO beta gam del eps bp gp IR
+O bb bf ff
+O2 SR
+
+----
+ 500 600 A 10 R 10
+ 600 750 M 10
+
+----
+ 100 ICCD1 200 300 400
+ 500 ICCD2 600 700 800
+
+----
