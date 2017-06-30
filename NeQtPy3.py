@@ -60,8 +60,8 @@ class Window(QMainWindow):
     def openFileNameDialog(self): #MASTER READ CAPABILITY
         name, _ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*);;Input Files (*.inp)")
         if name:
-            
-            line_num=0
+            print("Opening Input File:",name)
+            line_num=2
             l_input = {}
             input_text = open(name).read()
             ba = QtCore.QByteArray(input_text.encode('utf-8'))
@@ -73,17 +73,26 @@ class Window(QMainWindow):
                     if "Line" in line1:
                         line1= input_line.readLine()
                         count=0
+                        l_input['Line'+str(line_num)] = np.empty(shape=(2,2),dtype=str)
                         while re.match('(.)',line1) is not None:
-                            l_input['Line'+str(line_num),count]=line1
+                            tmp=line1.split()
+                            print("TMP SPLIT FILE IS",tmp)
+                            l_input['Line'+str(line_num)]=np.resize(l_input['Line'+str(line_num)],[count,len(tmp)])
+                            print("LINPUT IS ",l_input['Line'+str(line_num)])
+                            for i in range(len(tmp)):
+                                print(l_input['Line'+str(line_num)][count])
+                                print(tmp[i])
+                                x=1
                             line1= input_line.readLine()
                             count+=1
                         line_num+=1
-            temp =l_input['Line0',3]
-            del l_input['Line0',1]
-            del l_input['Line0',2]
-            del l_input['Line0',3]
-            l_input['Line0',0] = temp
-
+            #temp =l_input['Line2',3]
+            #del l_input['Line2',1]
+            #del l_input['Line2',2]
+            #del l_input['Line2',3]
+            #l_input['Line2',0] = temp
+            print(l_input)
+            
 ##should probably create a function that handles the dictionary and           
     def helpFileDialog(self):
         self.helpfile = MyHelpWidget(self)
@@ -91,100 +100,115 @@ class Window(QMainWindow):
         
     def saveFileDialog(self):   #MASTER WRITE CAPABILITY
         name = QFileDialog.getSaveFileName(self,"Save File","","All Files (*);;Input Files (*.inp)")
+        print("Writing out to:",name[0])
         f = open(name[0], 'w')
-        f.write("15.0\n")
-        f.write("----\n")
-        for i in range(len(self.content.il.get('Line2'))):
-            if self.content.il['Line2',i].isChecked() == True:
-                data = self.content.il2info[i]
-                data = data[data.find("(")+1:data.find(")")].split()[0]
-                f.write(data)
-                if i == 0 or i == 3:
-                    data = str(2)
-                    f.write(data)
-        f.write("\n\n")
-        f.write("----\n")
-        for i in range(len(self.content.il)):
-            if self.content.il[i].isChecked() == True:
-                data = self.content.il3info[i]
-                data = data[data.find("(")+1:data.find(")")].split()[0]
-                f.write(data)
-                if "Non" in self.content.il3s[i].text() and self.content.il3s[i].isChecked() == True:
-                    if self.content.nbdrop1.currentIndex() != 0:
-                        ind = self.content.nbdrop1.currentIndex()
-                        data = self.content.nbdrop1.itemText(ind)
-                        data = data[data.find("(")+1:data.find(")")].split()[0]
-                        f.write(" "+data)
-                    ind = self.content.nbdrop2.currentIndex()
-                    data = self.content.nbdrop2.itemText(ind)
+        f.write("15.0\n*******\n")
+        f.write("Line 0: Header - anything between here and the ---'s writes to stdout\n\
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa <- 1st format line\n\
+--------------------------\n\
+/share/apps/neqair/v15.0-prerelease/DATABASES")
+        for i in range(len(self.content.il['Line2'])):
+            for j in range(2):
+                if hasattr(self.content.il['Line2'][i,j],'setChecked') and self.content.il['Line2'][i,j].isChecked()==True:
+                    data = self.content.il['Line2'][i,j].text()
                     data = data[data.find("(")+1:data.find(")")].split()[0]
-                    f.write(" "+data)
-                    f.write("\n")
+                    f.write(data)
+        print("Filetype Written")
         f.write("\n\n")
         f.write("----\n")
-        for i in range(len(self.content.il4s)):
-            if self.content.il4s[i].isChecked() == True:
+        for i in range(len(self.content.il['Line3'])):
+            for j in range(3):
+                if hasattr(self.content.il['Line3'][i,j],'setChecked') and self.content.il['Line3'][i,j].isChecked() == True:
+                    data = self.content.il3info[i]
+                    data = data[data.find("(")+1:data.find(")")].split()[0]
+                    f.write(data)
+                    if "Non" in self.content.il['Line3'][i,j].text() and self.content.il['Line3'][i,j].isChecked() == True:
+                        if self.content.il['Line3'][i,1].currentIndex() != 0:
+                            ind = self.content.il['Line3'][i,1].currentIndex()
+                            data = self.content.il['Line3'][i,1].itemText(ind)
+                            data = data[data.find("(")+1:data.find(")")].split()[0]
+                            f.write(" "+data)
+                            ind = self.content.il['Line3'][i,2].currentIndex()
+                            data = self.content.il['Line3'][i,2].itemText(ind)
+                            data = data[data.find("(")+1:data.find(")")].split()[0]
+                            f.write(" "+data)
+                            f.write("\n")
+        print("State Pop Method Written")
+        f.write("\n\n")
+        f.write("----\n")
+        for i in range(len(self.content.il['Line4'])):
+            if hasattr(self.content.il['Line4'][i,0],'setChecked') and self.content.il['Line4'][i,0].isChecked() == True:
                 data = self.content.il4info[i]
                 data = data[data.find("(")+1:data.find(")")].split()[0]
                 f.write(data)
         f.write("\n\n")
         f.write("----\n")
-        for i in range(len(self.content.il5s)):
-            if self.content.il5s[i].isChecked() == True:
+        print("Geometry Written")
+        for i in range(len(self.content.il['Line5'])):
+            if hasattr(self.content.il['Line5'][i,0],'setChecked') and self.content.il['Line5'][i,0].isChecked() == True:
                 data = self.content.il5info[i]
                 data = data[data.find("(")+1:data.find(")")].split()[0]
                 f.write(data)
+        print("Boundary Written")
         f.write("\n\n")
         f.write("----\n")
         for i in range(len(self.content.speclist)):
-            if self.content.bs[i].isChecked() == True:
-                filedata =self.content.speclist[i] 
-                f.write(filedata+" ")
-                if len(self.content.bs[i].text()) == 1 or (len(self.content.bs[i].text()) == 2 and "+" in self.content.bs[i].text()):
-                    for j in range(3):
-                        if self.content.cs[i,j].isChecked() == True:
-                            f.write(self.content.aband[j]+" ")
+            if hasattr(self.content.il['Line6'][i],'setChecked') and self.content.il['Line6'][i].isChecked() == True:
+                print("Writing",self.content.il['Line6'][i].text())
+                filedata =self.content.il['Line6'][i].text()
+                f.write(filedata)
+                if len(self.content.il['Line6'][i].text()) == 1:
+                    for j in range(len(self.content.aband)):
+                        if self.content.il['Line6CB'][i,j].isChecked() == True:
+                            f.write(" "+self.content.il['Line6CB'][i,j].text())
                     f.write("\n")
-                if not "+" in self.content.bs[i].text():
-                    if "NO" in self.content.bs[i].text():
-                        for j in range(len(self.content.noband)):
-                            if self.content.cs[i,j].isChecked() == True:
-                                f.write(self.content.noband[j]+" ")
-                        f.write("\n")
-                    if "N2" in self.content.bs[i].text():
-                        for j in range(len(self.content.n2band)):
-                            if self.content.cs[i,j].isChecked() == True:
-                                f.write(self.content.n2band[j]+" ")
-                        f.write("\n")
-                    if "O2" in self.content.bs[i].text():
-                        for j in range(len(self.content.o2band)):
-                            if self.content.cs[i,j].isChecked() == True:
-                                f.write(self.content.o2band[j]+" ")
-                        f.write("\n")
+                if "NO" in self.content.il['Line6'][i].text():
+                    for j in range(len(self.content.noband)):
+                        if self.content.il['Line6CB'][i,j].isChecked() == True:
+                            f.write(" "+self.content.il['Line6CB'][i,j].text())
+                    f.write("\n")
+                if "N2" in self.content.il['Line6'][i].text():
+                    for j in range(len(self.content.n2band)):
+                        if self.content.il['Line6CB'][i,j].isChecked() == True:
+                            f.write(" "+self.content.il['Line6CB'][i,j].text())
+                    f.write("\n")
+                if "O2" in self.content.il['Line6'][i].text():
+                    for j in range(len(self.content.o2band)):
+                        if self.content.il['Line6CB'][i,j].isChecked() == True:
+                            f.write(" "+self.content.il['Line6CB'][i,j].text())
+                    f.write("\n")
+        print("Species Bands Written")
+        f.write("\n")                
         f.write("----\n")
         for i in range(self.content.regionbox.value()):
-            if self.content.il6s[i,0].text() != "0.0":
-                for j in range(2):
-                    dataw1w2 = self.content.il6s[i,j].text()
-                    f.write(dataw1w2+" ")
-                ind = self.content.nbdrop3.currentIndex()
-                datanb = self.content.nbdrop3.itemText(ind)
-                dataam = self.content.il6s[i,2].text()
-                if self.content.il6s[i,3].isChecked() == True:
-                    f.write(datanb+" "+dataam+" R "+self.content.il6s[i,4].text())
-                
-        f.write("\n\n")
+            if self.content.il['Line7'][i,0].text() != "0.0":
+                for j in range(len(self.content.il['Line7'][0,:])-1):
+                    if hasattr(self.content.il['Line7'][i,j],'text') and not hasattr(self.content.il['Line7'][i,j],'isChecked'):
+                        dataw1w2 = self.content.il['Line7'][i,j].text()
+                        f.write(" "+dataw1w2)
+                    if hasattr(self.content.il['Line7'][i,j],'currentIndex'):
+                        ind = self.content.il['Line7'][i,j].currentIndex()
+                        dataam = self.content.il['Line7'][i,j].itemText(ind)
+                        f.write(" "+dataam)
+                    if hasattr(self.content.il['Line7'][i,j],'isChecked') and self.content.il['Line7'][i,j].isChecked() == True:
+                        f.write(" R "+self.content.il['Line7'][i,j+1].text())
+                f.write("\n")
+        print("Regions Written")
+        f.write("\n")
         f.write("----\n")
         for i in range(self.content.regionbox.value()):
-            if self.content.il6s[i,0].text() != "0.0":    
-                datal71 = self.content.il7s[i,j].text()
-                ind = self.content.nbdrop4.currentIndex()
-                line_s = self.content.nbdrop4.itemText(ind)
-                f.write(datal71+" "+line_s)
-                for j in range(3):
-                    datal72 = self.content.il7s[i,j].text()
-                    f.write(" "+datal72)
-        f.write("\n\n")
+            if self.content.il['Line8'][i,0].text() != "0.0": 
+                for j in range(len(self.content.il['Line8'][0,:])):
+                    if hasattr(self.content.il['Line8'][i,j],'text'):
+                        dataw1w2 = self.content.il['Line8'][i,j].text()
+                        f.write(" "+dataw1w2)
+                    if hasattr(self.content.il['Line8'][i,j],'currentIndex'):
+                        ind = self.content.il['Line8'][i,j].currentIndex()
+                        dataam = self.content.il['Line8'][i,j].itemText(ind)
+                        f.write(" "+dataam)
+                f.write("\n")
+        print("Scan Written")
+        f.write("\n")
         f.write("----\n")
         f.close()
         ## try actually writing all of the variables out first and then format one f.write function
@@ -313,7 +337,7 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             tmp_arr[i,0] = QtWidgets.QCheckBox(self.il2info[i],self)    
             self.tab1.layout3.addWidget(tmp_arr[i,0],i+1,0)
             if "(I)" in self.il2info[i] or "(S)" in self.il2info[i]:
-                tmp_arr[i,1] = QtWidgets.QCheckBox("Column Format?",self)
+                tmp_arr[i,1] = QtWidgets.QCheckBox("(2)Column Format?",self)
                 self.tab1.layout3.addWidget(tmp_arr[i,1],i+1,2,QtCore.Qt.AlignRight)
                 count+=1                
             count+=1   
@@ -376,16 +400,13 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
                 if j<2 or j ==3 or j == 5:
                     tmp_arr[i,j] = QtWidgets.QLineEdit("0.0",self)
                     self.tab4.layout3.addWidget(tmp_arr[i,j],i+1,j)
-                    print(i,j,self.tab4.layout3.count())
                 if j ==2:
                     tmp_arr[i,j] = QtWidgets.QComboBox()
                     tmp_arr[i,j].addItems(self.il6info[2:4])
                     self.tab4.layout3.addWidget(tmp_arr[i,j],i+1,j)
-                    print(i,j,self.tab4.layout3.count())
                 if j ==4:
                     tmp_arr[i,j] = QtWidgets.QCheckBox("R",self)
                     self.tab4.layout3.addWidget(tmp_arr[i,j],i+1,j)
-                    print(i,j,self.tab4.layout3.count())
         self.il['Line7'] = tmp_arr #creates the Regions section of the dictionary
         self.tab4.setLayout(self.tab4.layout3)
         print("created Regions")
@@ -455,6 +476,7 @@ class Widgettown(QWidget): #WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.noband = ["beta", "gam", "del", "eps", "bp", "gp", "IR"]
         datafile, __ = QFileDialog.getOpenFileName(self, "Open File","","All Files (*)")
         if datafile:
+            print("Opening LOS File:",datafile)
             datafile = str(datafile)
             spectrum =np.genfromtxt(datafile,dtype=None,skip_header=21,names=True)
             self.spec = spectrum.dtype.names[7:-1]#omitting all of the n, n_total stuff
