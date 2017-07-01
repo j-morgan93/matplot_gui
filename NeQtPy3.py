@@ -96,18 +96,19 @@ class Window(QMainWindow):
                 for m in range(len(l_input['Line'+str(i)])):  # for the range of the input line dictionary
                     for n in range(len(l_input['Line'+str(i)][m])):
                             print("COLUMNSSSS", 'Line'+str(i), l_input['Line'+str(i)][m, n])
-                            for g in range(len(self.content.il['Line'+str(i)])):  # for the range of the exisiting dictionary and corresonding lines
-                                for h in range(len(self.content.il['Line'+str(i)][g])):
-                                    if i != 6:
-                                        if i == 3 and self.content.il['Line'+str(i)][1, 0].isChecked() is True:
-                                            if hasattr(self.content.il['Line'+str(i)][g, h], 'currentIndex')\
-                                            and "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].itemText():
+                            if i != 6:
+                                for g in range(len(self.content.il['Line'+str(i)])):  # for the range of the exisiting dictionary and corresonding lines
+                                    for h in range(len(self.content.il['Line'+str(i)][g])):
+                                            if i == 3 and self.content.il['Line'+str(i)][1, 0].isChecked() is True:
+                                                if hasattr(self.content.il['Line'+str(i)][g, h], 'currentIndex'):
+                                                    for k in range(self.content.il['Line'+str(i)][g, h].count()):
+                                                        if "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].itemText(k):
+                                                            print(l_input['Line'+str(i)][m, n], "trying to go in", self.content.il['Line'+str(i)][g, h].itemText(k))
+                                                            self.content.il['Line'+str(i)][g, h].setCurrentIndex(k)
+                                            if hasattr(self.content.il['Line'+str(i)][g, h], 'setChecked') and "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].text():
                                                 print(l_input['Line'+str(i)][m, n], "trying to go in", self.content.il['Line'+str(i)][g, h].text())
                                                 self.content.il['Line'+str(i)][g, h].setChecked(True)
-                                        if hasattr(self.content.il['Line'+str(i)][g, h], 'setChecked')\
-                                        and "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].text():
-                                            print(l_input['Line'+str(i)][m, n], "trying to go in", self.content.il['Line'+str(i)][g, h].text())
-                                            self.content.il['Line'+str(i)][g, h].setChecked(True)
+                                            # must include the lineedits now so that they can be populated from the neqair.inp file.
 
     def helpFileDialog(self):
         self.helpfile = MyHelpWidget(self)
@@ -123,8 +124,7 @@ class Window(QMainWindow):
                 /share/apps/neqair/v15.0-prerelease/DATABASES")
         for i in range(len(self.content.il['Line2'])):
             for j in range(2):
-                if hasattr(self.content.il['Line2'][i, j], 'setChecked')\
-                and self.content.il['Line2'][i, j].isChecked() is True:
+                if hasattr(self.content.il['Line2'][i, j], 'setChecked') and self.content.il['Line2'][i, j].isChecked() is True:
                     data = self.content.il['Line2'][i, j].text()
                     data = data[data.find("(")+1:data.find(")")].split()[0]
                     f.write(data)
@@ -133,13 +133,11 @@ class Window(QMainWindow):
         f.write("----\n")
         for i in range(len(self.content.il['Line3'])):
             for j in range(3):
-                if hasattr(self.content.il['Line3'][i, j], 'setChecked')\
-                and self.content.il['Line3'][i, j].isChecked() is True:
+                if hasattr(self.content.il['Line3'][i, j], 'setChecked') and self.content.il['Line3'][i, j].isChecked() is True:
                     data = self.content.il3info[i]
                     data = data[data.find("(")+1:data.find(")")].split()[0]
                     f.write(data)
-                    if "Non" in self.content.il['Line3'][i, j].text()\
-                    and self.content.il['Line3'][i, j].isChecked() is True:
+                    if "Non" in self.content.il['Line3'][i, j].text() and self.content.il['Line3'][i, j].isChecked() is True:
                         if self.content.il['Line3'][i,1].currentIndex() != 0:
                             ind = self.content.il['Line3'][i, 1].currentIndex()
                             data = self.content.il['Line3'][i, 1].itemText(ind)
@@ -154,8 +152,7 @@ class Window(QMainWindow):
         f.write("\n\n")
         f.write("----\n")
         for i in range(len(self.content.il['Line4'])):
-            if hasattr(self.content.il['Line4'][i, 0], 'setChecked')\
-            and self.content.il['Line4'][i, 0].isChecked() is True:
+            if hasattr(self.content.il['Line4'][i, 0], 'setChecked') and self.content.il['Line4'][i, 0].isChecked() is True:
                 data = self.content.il4info[i]
                 data = data[data.find("(")+1:data.find(")")].split()[0]
                 f.write(data)
@@ -172,8 +169,7 @@ class Window(QMainWindow):
         f.write("\n\n")
         f.write("----\n")
         for i in range(len(self.content.speclist)):
-            if hasattr(self.content.il['Line6'][i], 'setChecked')\
-            and self.content.il['Line6'][i].isChecked() is True:
+            if hasattr(self.content.il['Line6'][i], 'setChecked') and self.content.il['Line6'][i].isChecked() is True:
                 print("Writing", self.content.il['Line6'][i].text())
                 filedata =self.content.il['Line6'][i].text()
                 f.write(filedata)
@@ -203,16 +199,14 @@ class Window(QMainWindow):
         for i in range(self.content.regionbox.value()):
             if self.content.il['Line7'][i,0].text() != "0.0":
                 for j in range(len(self.content.il['Line7'][0, :])-1):
-                    if hasattr(self.content.il['Line7'][i, j], 'text')\
-                    and not hasattr(self.content.il['Line7'][i, j], 'isChecked'):
+                    if hasattr(self.content.il['Line7'][i, j], 'text') and not hasattr(self.content.il['Line7'][i, j], 'isChecked'):
                         dataw1w2 = self.content.il['Line7'][i, j].text()
                         f.write(" "+dataw1w2)
                     if hasattr(self.content.il['Line7'][i, j], 'currentIndex'):
                         ind = self.content.il['Line7'][i, j].currentIndex()
                         dataam = self.content.il['Line7'][i, j].itemText(ind)
                         f.write(" "+dataam)
-                    if hasattr(self.content.il['Line7'][i, j], 'isChecked')\
-                    and self.content.il['Line7'][i, j].isChecked() is True:
+                    if hasattr(self.content.il['Line7'][i, j], 'isChecked') and self.content.il['Line7'][i, j].isChecked() is True:
                         f.write(" R "+self.content.il['Line7'][i, j+1].text())
                 f.write("\n")
         print("Regions Written")
@@ -265,8 +259,6 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
 
         self.setLayout(hbox)
         self.leftlist.currentRowChanged.connect(self.display)
-        self.setGeometry(10, 10, 10, 10)
-        self.setWindowTitle('StackedWidget demo')
         self.show()
 
     def stack1UI(self):  # THE PLOTTING CAPABILITY
@@ -287,7 +279,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.colchange2 = QtWidgets.QComboBox()
         self.colchange2.currentIndexChanged.connect(self.newplot)  # make new plot function
         self.button2 = QtWidgets.QPushButton('ClearPlot')
-        self.button2.clicked.connect(self.clearplot)
+        self.button2.clicked.connect(self.figure.clear)
 
         layout = QtWidgets.QVBoxLayout()
         glayout = QGridLayout()
@@ -496,6 +488,8 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         # FUNCTIONS-------------------------------------------------
     def readplot(self):  # OPENING AND READING FIGURE IN
         self.figure.clf()
+        self.colchange1.clear()  # clear the previous plot datas entires
+        self.colchange2.clear()  # clear the previous plot datas entires
         datafile, __ = QFileDialog.getOpenFileName(self, "Open File", "", "All Files(*)")
         if datafile:
             datafile = str(datafile)
@@ -624,7 +618,8 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
                         self.il['Line6CB'][i, j].setChecked(True)
 
     def clearplot(self):
-        self.figure.clf()
+        self.figure.close()
+        self.canvas.draw()
 
     def display(self, i):
         self.Stack.setCurrentIndex(i)
