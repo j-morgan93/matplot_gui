@@ -7,7 +7,7 @@ Created on Sat Jun 24 10:03:22 2017
 
 import sys
 import re
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QWidget, QStackedWidget, QListWidget, QApplication,\
  QLineEdit, QCheckBox, QLabel, QAction, QMainWindow, QFileDialog, QGridLayout
 
@@ -76,6 +76,7 @@ class Window(QMainWindow):
                         line1 = input_line.readLine()
                         count = 1
                         l_input['Line'+str(line_num)] = np.empty(shape=(1, 1), dtype='<U25')
+                        print("LINE1 BEFORE WHILE",line1)
                         while re.match('(.)', line1) is not None:
                             tmp=line1.split()
                             for i in range(len(tmp)):
@@ -84,31 +85,56 @@ class Window(QMainWindow):
                             for i in range(len(tmp)):
                                 l_input['Line'+str(line_num)][count-1, i]=tmp[i]
                             line1 = input_line.readLine()
+                            print("LINE1 IN WHILE",line1)
                             count += 1
                         line_num += 1
             tmp = list(l_input['Line2'][-1, 0])
             l_input['Line2'] = np.resize(l_input['Line2'], [1, len(tmp)])
             for ll in range(len(tmp)):
                 l_input['Line2'][0, ll] = tmp[ll]
+            print(len(l_input))
+            # SHOULD TRY TO MODULARIZE THIS AND GNERALIZE FOR GETTING THE INPUTS WHERE THEY NEED TO GO
             # now going to compare the entries in the dictionary to buttons
-        for i in range(2, 10, 1):  # starting from line 2
-            if l_input['Line'+str(i)] is not None:
-                for m in range(len(l_input['Line'+str(i)])):  # for the range of the input line dictionary
-                    for n in range(len(l_input['Line'+str(i)][m])):
-                            print("COLUMNSSSS", 'Line'+str(i), l_input['Line'+str(i)][m, n])
-                            if i != 6:
-                                for g in range(len(self.content.il['Line'+str(i)])):  # for the range of the exisiting dictionary and corresonding lines
-                                    for h in range(len(self.content.il['Line'+str(i)][g])):
-                                            if i == 3 and self.content.il['Line'+str(i)][1, 0].isChecked() is True:
-                                                if hasattr(self.content.il['Line'+str(i)][g, h], 'currentIndex'):
-                                                    for k in range(self.content.il['Line'+str(i)][g, h].count()):
-                                                        if "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].itemText(k):
-                                                            print(l_input['Line'+str(i)][m, n], "trying to go in", self.content.il['Line'+str(i)][g, h].itemText(k))
-                                                            self.content.il['Line'+str(i)][g, h].setCurrentIndex(k)
-                                            if hasattr(self.content.il['Line'+str(i)][g, h], 'setChecked') and "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].text():
-                                                print(l_input['Line'+str(i)][m, n], "trying to go in", self.content.il['Line'+str(i)][g, h].text())
-                                                self.content.il['Line'+str(i)][g, h].setChecked(True)
-                                            # must include the lineedits now so that they can be populated from the neqair.inp file.
+        for i in range(2, len(l_input)+2, 1):  # starting from line 2
+            if l_input['Line'+str(i)] is not None:                           
+                if i > 6:
+                    if i == 7:
+                        self.content.regionbox.setValue(len(l_input['Line'+str(i)]))
+                    for g in range(len(self.content.il['Line'+str(i)])):  # for the range of the input line dictionary
+                        for h in range(len(self.content.il['Line'+str(i)][g])):
+                            print("IN IL THERE IS: ",self.content.il['Line'+str(i)][g, h])
+                            try:
+                                if l_input['Line'+str(i)][g, h] is not None:
+                                    if "QLineEdit" in str(self.content.il['Line'+str(i)][g, h]) and any(char.isdigit() for char in l_input['Line'+str(i)][g, h]) is True:
+                                        self.content.il['Line'+str(i)][g, h].setText(l_input['Line'+str(i)][g, h])
+                                        print("set",l_input['Line'+str(i)][g, h],"in QLineEdit")
+                                    elif hasattr(self.content.il['Line'+str(i)][g, h], 'currentIndex') is True:
+                                        for k in range(self.content.il['Line'+str(i)][g, h].count()):
+                                            if l_input['Line'+str(i)][g, h] in self.content.il['Line'+str(i)][g, h].itemText(k):
+                                                self.content.il['Line'+str(i)][g, h].setCurrentIndex(k)
+                                                print("set",l_input['Line'+str(i)][g, h],"in QComboBox")
+                                    elif "QCheckBox" in str(self.content.il['Line'+str(i)][g, h]) and l_input['Line'+str(i)][g, h] is not None:
+                                        self.content.il['Line'+str(i)][g, h].setChecked(True)
+                                        self.content.il['Line'+str(i)][g, h+1].setText(l_input['Line'+str(i)][g, h+1])
+                                        print("set",l_input['Line'+str(i)][g, h],"in QCheckBox")
+                            except:
+                                print("READ DID NOT FIND ENTRIES AT:", g, h)
+                if i < 6:
+                    for m in range(len(l_input['Line'+str(i)])):  # for the range of the input line dictionary
+                         for n in range(len(l_input['Line'+str(i)][m])):
+                             for g in range(len(self.content.il['Line'+str(i)])):  # for the range of the existing dictionary and corresonding lines
+                                 for h in range(len(self.content.il['Line'+str(i)][g])):
+                                     if i == 3 and self.content.il['Line'+str(i)][1, 0].isChecked() is True:
+                                         if hasattr(self.content.il['Line'+str(i)][g, h], 'currentIndex'):
+                                             for k in range(self.content.il['Line'+str(i)][g, h].count()):
+                                                 if "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].itemText(k):
+                                                     self.content.il['Line'+str(i)][g, h].setCurrentIndex(k)
+                                                     print("COMBO DONE")
+                                     elif "QCheckBox" in str(self.content.il['Line'+str(i)][g, h]) and "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].text():
+                                         print(l_input['Line'+str(i)][m, n], "trying to go in", self.content.il['Line'+str(i)][g, h].text())
+                                         self.content.il['Line'+str(i)][g, h].setChecked(True)
+                                         print("CHECK DONE")
+                                                
 
     def helpFileDialog(self):
         self.helpfile = MyHelpWidget(self)
@@ -119,8 +145,8 @@ class Window(QMainWindow):
         f = open(name[0], 'w')
         f.write("15.0\n*******\n")
         f.write("Line 0: Header - anything between here and the ---'s writes to stdout\n\
-                aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa <- 1st format line\n\
-                --------------------------\n\
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa <- 1st format line\n\
+--------------------------\n\
                 /share/apps/neqair/v15.0-prerelease/DATABASES")
         for i in range(len(self.content.il['Line2'])):
             for j in range(2):
@@ -427,6 +453,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             for j in range(6):
                 if j<2 or j == 3 or j == 5:
                     tmp_arr[i, j] = QtWidgets.QLineEdit("0.0", self)
+                    tmp_arr[i, j].setValidator(QtGui.QDoubleValidator())
                     self.tab4.layout3.addWidget(tmp_arr[i, j], i+1, j)
                 if j == 2:
                     tmp_arr[i, j] = QtWidgets.QComboBox()
@@ -444,12 +471,14 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         tmp_arr1 = np.empty(shape=(self.regionbox.value(), 5), dtype=object)
         for i in range(self.regionbox.value()):  # create default number of tables...too
             tmp_arr1[i, 0] = QtWidgets.QLineEdit("0.0", self)
+            tmp_arr1[i, 0].setValidator(QtGui.QDoubleValidator())
             self.tab5.layout3.addWidget(tmp_arr1[i, 0], i+1, 0)
             tmp_arr1[i, 1] = QtWidgets.QComboBox()
             tmp_arr1[i, 1].addItems(self.il7info[:])
             self.tab5.layout3.addWidget(tmp_arr1[i, 1], i+1, 1)
             for j in range(3):
                 tmp_arr1[i, j+2] = QtWidgets.QLineEdit("0.0", self)
+                tmp_arr1[i, j+2].setValidator(QtGui.QDoubleValidator())
                 self.tab5.layout3.addWidget(tmp_arr1[i, j+2], i+1, j+2)
         self.il['Line8'] = tmp_arr1   # creates the Scan portion of the dictionary. only required for shock tube
         self.tab5.setLayout(self.tab5.layout3)
@@ -460,21 +489,26 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         tmp_arr1 = np.empty(shape=(self.regionbox.value(), 3), dtype=object)
 
         tmp_arr1[0, 0] = QtWidgets.QComboBox()
-        tmp_arr1[0, 0].addItem('Triangle')
-        tmp_arr1[0, 0].addItem('Trapezoid')
+        tmp_arr1[0, 0].addItem('triangle')
+        tmp_arr1[0, 0].addItem('trapezoid')
         self.tab6.layout3.addWidget(tmp_arr1[0, 0], 0, 0)
         tmp_arr1[0, 1] = QtWidgets.QLineEdit("0.0", self)
+        tmp_arr1[0, 1].setValidator(QtGui.QDoubleValidator())
         self.tab6.layout3.addWidget(tmp_arr1[0, 1], 0, 1)
         tmp_arr1[0, 2] = QtWidgets.QLineEdit("0.0", self)
+        tmp_arr1[0, 2].setValidator(QtGui.QDoubleValidator())
         self.tab6.layout3.addWidget(tmp_arr1[0, 2], 0, 2)
         tmp_arr1[1, 0] = QtWidgets.QComboBox()
         tmp_arr1[1, 0].addItems(self.il7info[:])
         self.tab6.layout3.addWidget(tmp_arr1[1, 0], 1, 0)
         tmp_arr1[1, 1] = QtWidgets.QLineEdit("0.0", self)
+        tmp_arr1[1, 1].setValidator(QtGui.QDoubleValidator())
         self.tab6.layout3.addWidget(tmp_arr1[1, 1], 1, 1)
         tmp_arr1[1, 2] = QtWidgets.QLineEdit("0.0", self)
+        tmp_arr1[1, 2].setValidator(QtGui.QDoubleValidator())
         self.tab6.layout3.addWidget(tmp_arr1[1, 2], 1, 2)
         tmp_arr1[2, 0] = QtWidgets.QLineEdit("0.0", self)
+        tmp_arr1[2, 0].setValidator(QtGui.QDoubleValidator())
         self.tab6.layout3.addWidget(tmp_arr1[2, 0], 2, 0)
         self.il['Line9'] = tmp_arr1   # creates the Scan portion of the dictionary. only required for shock tube
         self.tab6.setLayout(self.tab6.layout3)
@@ -588,6 +622,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             for j in range(6):
                 if j<2 or j == 3 or j == 5:
                     self.il['Line7'][count-1, j] = QtWidgets.QLineEdit("0.0", self)
+                    self.il['Line7'][count-1, j].setValidator(QtGui.QDoubleValidator())
                     self.tab4.layout3.addWidget(self.il['Line7'][count-1, j], count, j)
                 if j == 2:
                     self.il['Line7'][count-1, j] = QtWidgets.QComboBox()
@@ -600,12 +635,14 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
 
             self.il['Line8'] = np.resize(self.il['Line8'], [count, 5])
             self.il['Line8'][count-1, 0] = QtWidgets.QLineEdit("0.0", self)
+            self.il['Line8'][count-1, 0].setValidator(QtGui.QDoubleValidator())
             self.tab5.layout3.addWidget(self.il['Line8'][count-1, 0], count, 0)
             self.il['Line8'][count-1, 0] = QtWidgets.QComboBox()
             self.il['Line8'][count-1, 0].addItems(self.il7info[:])
             self.tab5.layout3.addWidget(self.il['Line8'][count-1, 0], count, 1)
             for j in range(3):
                 self.il['Line8'][count-1, j+2] = QtWidgets.QLineEdit("0.0", self)
+                self.il['Line8'][count-1, j+2].setValidator(QtGui.QDoubleValidator())
                 self.tab5.layout3.addWidget(self.il['Line8'][count-1, j+2], count, j+2)
             self.tab5.setLayout(self.tab5.layout3)
 
