@@ -7,7 +7,7 @@ Created on Sat Jun 24 10:03:22 2017
 
 import sys
 import re
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QWidget, QStackedWidget, QListWidget, QApplication,\
  QLineEdit, QCheckBox, QLabel, QAction, QMainWindow, QFileDialog, QGridLayout, QVBoxLayout
 
@@ -74,41 +74,86 @@ class Window(QMainWindow):
                     line1 = input_line.readLine()
                     if "Line" in line1:
                         line1 = input_line.readLine()
-                        count = 1
+                        count = 0
                         l_input['Line'+str(line_num)] = np.empty(shape=(1, 1), dtype='<U25')
+                        print("LINE"+str(line_num)," BEFORE WHILE",line1)
                         while re.match('(.)', line1) is not None:
                             tmp=line1.split()
                             for i in range(len(tmp)):
                                 tmp[i] = str(tmp[i])
-                            l_input['Line'+str(line_num)]=np.resize(l_input['Line'+str(line_num)], [count, len(tmp)])
-                            for i in range(len(tmp)):
-                                l_input['Line'+str(line_num)][count-1, i]=tmp[i]
+                            if count > 0 and len(tmp) != len(l_input['Line'+str(line_num)][count-1]):
+                                if len(tmp) > len(l_input['Line'+str(line_num)][count-1]):
+                                    print("MORE")
+                                    dif = len(tmp) - len(l_input['Line'+str(line_num)][count-1])
+                                    t = np.pad(l_input['Line'+str(line_num)][0:count-1], ((0,0),(0,dif)), 'constant',constant_values=(0,))
+                                    l_input['Line'+str(line_num)] = t
+                                    l_input['Line'+str(line_num)]=np.resize(l_input['Line'+str(line_num)], [count+1, len(tmp)])
+                                    for i in range(len(tmp)):
+                                        l_input['Line'+str(line_num)][count, i]=tmp[i]
+                                    print("CHANGED",l_input['Line'+str(line_num)])
+                                elif len(tmp) < len(l_input['Line'+str(line_num)][count-1]):
+                                    print("LESS")
+                                    w = len(l_input['Line'+str(line_num)][count-1])
+                                    l_input['Line'+str(line_num)] = np.resize(l_input['Line'+str(line_num)], [count+1, w])
+                                    for i in range(len(tmp)):
+                                        l_input['Line'+str(line_num)][count, i]=tmp[i]
+                                    print("CHANGED",l_input['Line'+str(line_num)])
+                            else:
+                                l_input['Line'+str(line_num)]=np.resize(l_input['Line'+str(line_num)], [count+1, len(tmp)])
+                                for i in range(len(tmp)):
+                                    l_input['Line'+str(line_num)][count, i]=tmp[i]
+                                    print("LINPUT"+str(line_num)," =", l_input['Line'+str(line_num)][count, i], count, i)
                             line1 = input_line.readLine()
+                            print("LINE"+str(line_num)," IN WHILE", line1)                
                             count += 1
                         line_num += 1
+                        print(l_input)
             tmp = list(l_input['Line2'][-1, 0])
             l_input['Line2'] = np.resize(l_input['Line2'], [1, len(tmp)])
             for ll in range(len(tmp)):
                 l_input['Line2'][0, ll] = tmp[ll]
+            # SHOULD TRY TO MODULARIZE THIS AND GNERALIZE FOR GETTING THE INPUTS WHERE THEY NEED TO GO
             # now going to compare the entries in the dictionary to buttons
-        for i in range(2, 10, 1):  # starting from line 2
-            if l_input['Line'+str(i)] is not None:
-                for m in range(len(l_input['Line'+str(i)])):  # for the range of the input line dictionary
-                    for n in range(len(l_input['Line'+str(i)][m])):
-                            print("COLUMNSSSS", 'Line'+str(i), l_input['Line'+str(i)][m, n])
-                            if i != 6:
-                                for g in range(len(self.content.il['Line'+str(i)])):  # for the range of the exisiting dictionary and corresonding lines
-                                    for h in range(len(self.content.il['Line'+str(i)][g])):
-                                            if i == 3 and self.content.il['Line'+str(i)][1, 0].isChecked() is True:
-                                                if hasattr(self.content.il['Line'+str(i)][g, h], 'currentIndex'):
-                                                    for k in range(self.content.il['Line'+str(i)][g, h].count()):
-                                                        if "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].itemText(k):
-                                                            print(l_input['Line'+str(i)][m, n], "trying to go in", self.content.il['Line'+str(i)][g, h].itemText(k))
-                                                            self.content.il['Line'+str(i)][g, h].setCurrentIndex(k)
-                                            if hasattr(self.content.il['Line'+str(i)][g, h], 'setChecked') and "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].text():
-                                                print(l_input['Line'+str(i)][m, n], "trying to go in", self.content.il['Line'+str(i)][g, h].text())
-                                                self.content.il['Line'+str(i)][g, h].setChecked(True)
-                                            # must include the lineedits now so that they can be populated from the neqair.inp file.
+        for i in range(2, len(l_input)+2, 1):  # starting from line 2
+            if l_input['Line'+str(i)] is not None:                           
+                if i > 6:
+                    if i == 7:
+                        self.content.regionbox.setValue(len(l_input['Line'+str(i)]))
+                    for g in range(len(self.content.il['Line'+str(i)])):  # for the range of the input line dictionary
+                        for h in range(len(self.content.il['Line'+str(i)][g])):
+                            print("IN IL THERE IS: ",self.content.il['Line'+str(i)][g, h], "at", g, "and", h)
+                            try:
+                                if l_input['Line'+str(i)][g, h] is not None:
+                                    if "QLineEdit" in str(self.content.il['Line'+str(i)][g, h]) and any(char.isdigit() for char in l_input['Line'+str(i)][g, h]) is True:
+                                        self.content.il['Line'+str(i)][g, h].setText(l_input['Line'+str(i)][g, h])
+                                        print("set",l_input['Line'+str(i)][g, h],"in QLineEdit")
+                                    elif hasattr(self.content.il['Line'+str(i)][g, h], 'currentIndex') is True:
+                                        for k in range(self.content.il['Line'+str(i)][g, h].count()):
+                                            if l_input['Line'+str(i)][g, h] in self.content.il['Line'+str(i)][g, h].itemText(k):
+                                                self.content.il['Line'+str(i)][g, h].setCurrentIndex(k)
+                                                print("set",l_input['Line'+str(i)][g, h],"in QComboBox")
+                                    elif "QCheckBox" in str(self.content.il['Line'+str(i)][g, h]) and l_input['Line'+str(i)][g, h] is not None:
+                                        self.content.il['Line'+str(i)][g, h].setChecked(True)
+                                        self.content.il['Line'+str(i)][g, h+1].setText(l_input['Line'+str(i)][g, h+1])
+                                        print("set",l_input['Line'+str(i)][g, h],"in QCheckBox")
+                            except:
+                                print("READ DID NOT FIND ENTRIES AT: OR FIELD DOES NOT EXIST", g, h)
+                if i < 6:
+                    for m in range(len(l_input['Line'+str(i)])):  # for the range of the input line dictionary
+                         for n in range(len(l_input['Line'+str(i)][m])):
+                             for g in range(len(self.content.il['Line'+str(i)])):  # for the range of the existing dictionary and corresonding lines
+                                 for h in range(len(self.content.il['Line'+str(i)][g])):
+                                     if i == 3 and self.content.il['Line'+str(i)][1, 0].isChecked() is True:
+                                         if hasattr(self.content.il['Line'+str(i)][g, h], 'currentIndex'):
+                                             for k in range(self.content.il['Line'+str(i)][g, h].count()):
+                                                 if "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].itemText(k):
+                                                     self.content.il['Line'+str(i)][g, h].setCurrentIndex(k)
+                                                     print("COMBO DONE")
+                                     elif "QCheckBox" in str(self.content.il['Line'+str(i)][g, h]) and "("+l_input['Line'+str(i)][m, n]+")" in self.content.il['Line'+str(i)][g, h].text():
+                                         print(l_input['Line'+str(i)][m, n], "trying to go in", self.content.il['Line'+str(i)][g, h].text())
+                                         self.content.il['Line'+str(i)][g, h].setChecked(True)
+                                         print("CHECK DONE")
+                                                
 
     def helpFileDialog(self):
         self.helpfile = MyHelpWidget(self)
@@ -119,8 +164,8 @@ class Window(QMainWindow):
         f = open(name[0], 'w')
         f.write("15.0\n*******\n")
         f.write("Line 0: Header - anything between here and the ---'s writes to stdout\n\
-                aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa <- 1st format line\n\
-                --------------------------\n\
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa <- 1st format line\n\
+--------------------------\n\
                 /share/apps/neqair/v15.0-prerelease/DATABASES")
         for i in range(len(self.content.il['Line2'])):
             for j in range(2):
@@ -234,7 +279,8 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
     def __init__(self, parent):
         QWidget.__init__(self, parent)
         self.speclist = None
-
+        self.fontss = QtGui.QFont()
+        self.fontss.setBold(True)
         self.leftlist = QListWidget()
         self.leftlist.insertItem(0, 'Plots')
         self.leftlist.insertItem(1, 'Spectral Fit - Generate LOS file')
@@ -281,14 +327,14 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.button2 = QtWidgets.QPushButton('ClearPlot')
         self.button2.clicked.connect(self.figure.clear)
 
-        layout = QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         glayout = QGridLayout()
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
-        glayout.addWidget(self.button, 0, 0)
-        glayout.addWidget(self.button2, 0, 1)
-        glayout.addWidget(self.colchange1, 1, 0)
-        glayout.addWidget(self.colchange2, 1, 1)
+        glayout.addWidget(self.button,0,0)
+        glayout.addWidget(self.button2,0,1)
+        glayout.addWidget(self.colchange1,1,0)
+        glayout.addWidget(self.colchange2,1,1)
         layout.addLayout(glayout)
         self.stack1.setLayout(layout)
 
@@ -341,7 +387,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         # create the dictionaries to place the widgets within for each tab.
         self.il = {}
 
-        self.layout3 = QVBoxLayout(self)
+        self.layout3 = QtWidgets.QVBoxLayout(self)
         self.tabs = QtWidgets.QTabWidget()  # create the tabs
         self.tab1 = QWidget()
         self.tab2 = QWidget()
@@ -362,9 +408,12 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.tab1.layout1 = QGridLayout()
         self.tab1.legend1 = QLabel("File Outputs")
         self.tab1.legend2 = QLabel("Format Specifics")
+        self.tab1.legend2.setFont(self.fontss)
+        self.tab1.legend1.setFont(self.fontss)
         self.tab1.layout1.addWidget(self.tab1.legend1, 0, 0, QtCore.Qt.AlignCenter)
         self.tab1.layout1.addWidget(self.tab1.legend2, 0, 1, QtCore.Qt.AlignCenter)
         self.tab1.layout2 = QGridLayout()
+        
         count = 0
         tmp_arr = np.empty(shape=(len(self.il2info), 2), dtype=object)
         for i in range(7):  # INPUT LINE 2
@@ -372,7 +421,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             self.tab1.layout2.addWidget(tmp_arr[i, 0], i+1, 0)
             if "(I)" in self.il2info[i] or "(S)" in self.il2info[i]:
                 tmp_arr[i, 1] = QtWidgets.QCheckBox("(2)Column Format?", self)
-                self.tab1.layout2.addWidget(tmp_arr[i, 1], i+1, 1, QtCore.Qt.AlignRight)
+                self.tab1.layout2.addWidget(tmp_arr[i, 1], i+1, 2, QtCore.Qt.AlignRight)
                 count+= 1
             count+= 1
         self.il['Line2'] = tmp_arr  # Creates the OutPut type dictionary section
@@ -380,6 +429,8 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.tab1.layout3 = QGridLayout()
         self.tab1.legend3 = QLabel("State Population Methods")
         self.tab1.legend4 = QLabel("Method Specifics")
+        self.tab1.legend3.setFont(self.fontss)
+        self.tab1.legend4.setFont(self.fontss)      
         self.tab1.layout3.addWidget(self.tab1.legend3, 0, 0, QtCore.Qt.AlignCenter)
         self.tab1.layout3.addWidget(self.tab1.legend4, 0, 1, QtCore.Qt.AlignCenter)
         self.tab1.layout4 = QGridLayout()
@@ -408,6 +459,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         print("created State Population")
 
         # ---- Create second tab
+        
         self.tab2.layout3 = QGridLayout()
         self.losopen = QtWidgets.QPushButton("Read LOS")
         self.losopen.clicked.connect(self.ReadLOS)  # define the button's functionality
@@ -415,85 +467,195 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.tab2.setLayout(self.tab2.layout3)
 
         # ---- Create third tab
-        self.tab3.layout3 = QGridLayout()
-        self.tab3.layout3.addWidget(QLabel("GEOMETRY"), 0, 0, QtCore.Qt.AlignTop)
-        self.tab3.layout3.addWidget(QLabel("BOUNDARY CONDITIONS"), 0, 1, QtCore.Qt.AlignTop)
+        self.tab3.masterlayout = QVBoxLayout()
+        self.tab3.layout1 = QGridLayout()
+        self.tab3.legend1 = QLabel("Geometry")
+        self.tab3.legend2 = QLabel("Boundary Conditions")
+        self.tab3.legend2.setFont(self.fontss)
+        self.tab3.legend1.setFont(self.fontss)
+        self.tab3.layout1.addWidget(self.tab3.legend1, 0, 0, QtCore.Qt.AlignCenter)
+        self.tab3.layout1.addWidget(self.tab3.legend2, 0, 1, QtCore.Qt.AlignCenter)
+        self.tab3.layout2 = QGridLayout()
+        
         tmp_arr = np.empty(shape=(len(self.il4info), 1), dtype=object)
         for i in range(len(self.il4info)):  # INPUT LINE 4
             tmp_arr[i, 0] = QtWidgets.QCheckBox(self.il4info[i], self)
-            self.tab3.layout3.addWidget(tmp_arr[i, 0], count+i+2, 0)
+            self.tab3.layout2.addWidget(tmp_arr[i, 0], count+i+2, 0)
         self.il['Line4'] = tmp_arr  # creates the Geometry Section of the dictionary
         tmp_arr = np.empty(shape=(len(self.il5info), 1), dtype=object)
         for i in range(len(self.il5info)):  # INPUT LINE 5
             tmp_arr[i, 0] = QtWidgets.QCheckBox(self.il5info[i], self)
-            self.tab3.layout3.addWidget(tmp_arr[i, 0], count+i+2, 1)
+            self.tab3.layout2.addWidget(tmp_arr[i, 0], count+i+2, 1)
         self.il['Line5'] = tmp_arr  # creates the Boundary Condition section of the dictionary
-        self.tab3.setLayout(self.tab3.layout3)
+        self.tab3.masterlayout.addLayout(self.tab3.layout1)
+        self.tab3.masterlayout.addLayout(self.tab3.layout2)
+        self.tab3.setLayout(self.tab3.masterlayout)
         print("created Boundary/Geometry")
 
         # ---- Create fourth tab
-        self.tab4.layout3 = QGridLayout()
+        self.tab4.masterlayout = QVBoxLayout()
+        self.tab4.layout1 = QGridLayout()
+        self.tab4.legend1 = QLabel("Number of Regions")
+        self.tab4.legend1.setFont(self.fontss)
+        self.tab4.layout1.addWidget(self.tab4.legend1, 0, 0, QtCore.Qt.AlignCenter)
+        self.tab4.layout2 = QGridLayout()
         self.regionbox = QtWidgets.QSpinBox(self)
         self.regionbox.setValue(4)
-        self.tab4.layout3.addWidget(self.regionbox, 0, 0, 1, 6)
+        self.tab4.layout2.addWidget(self.regionbox, 0, 0, 1, 6)
         self.regionbox.valueChanged.connect(self.regionchange)
 
+        self.tab4.layout3 = QGridLayout()
+        self.tab4.legend2 = QLabel("Min Wavelength")
+        self.tab4.legend3 = QLabel("Max Wavelength")
+        self.tab4.legend4 = QLabel("Grid Spacing")
+        self.tab4.legend5 = QLabel("Delta")
+        self.tab4.legend6 = QLabel("Range?")
+        self.tab4.legend7 = QLabel("Range Value")
+        self.tab4.legend2.setFont(self.fontss)
+        self.tab4.legend3.setFont(self.fontss)
+        self.tab4.legend4.setFont(self.fontss)
+        self.tab4.legend5.setFont(self.fontss)
+        self.tab4.legend6.setFont(self.fontss)
+        self.tab4.legend7.setFont(self.fontss)
+        
+        self.tab4.layout3.addWidget(self.tab4.legend2, 0, 0, QtCore.Qt.AlignCenter)
+        self.tab4.layout3.addWidget(self.tab4.legend3, 0, 1, QtCore.Qt.AlignCenter)
+        self.tab4.layout3.addWidget(self.tab4.legend4, 0, 2, QtCore.Qt.AlignCenter)
+        self.tab4.layout3.addWidget(self.tab4.legend5, 0, 3, QtCore.Qt.AlignCenter)
+        self.tab4.layout3.addWidget(self.tab4.legend6, 0, 4, QtCore.Qt.AlignCenter)
+        self.tab4.layout3.addWidget(self.tab4.legend7, 0, 5, QtCore.Qt.AlignCenter)
+        self.tab4.layout4 = QGridLayout()
         tmp_arr = np.empty(shape=(self.regionbox.value(), 6), dtype=object)
         for i in range(self.regionbox.value()):  # create default number of tables
             for j in range(6):
                 if j<2 or j == 3 or j == 5:
                     tmp_arr[i, j] = QtWidgets.QLineEdit("0.0", self)
-                    self.tab4.layout3.addWidget(tmp_arr[i, j], i+1, j)
+                    tmp_arr[i, j].setValidator(QtGui.QDoubleValidator())
+                    self.tab4.layout4.addWidget(tmp_arr[i, j], i+1, j)
                 if j == 2:
                     tmp_arr[i, j] = QtWidgets.QComboBox()
                     tmp_arr[i, j].addItems(self.il6info[2:4])
-                    self.tab4.layout3.addWidget(tmp_arr[i, j], i+1, j)
+                    self.tab4.layout4.addWidget(tmp_arr[i, j], i+1, j)
                 if j == 4:
                     tmp_arr[i, j] = QtWidgets.QCheckBox("R", self)
-                    self.tab4.layout3.addWidget(tmp_arr[i, j], i+1, j)
+                    self.tab4.layout4.addWidget(tmp_arr[i, j], i+1, j)
         self.il['Line7'] = tmp_arr  # creates the Regions section of the dictionary
-        self.tab4.setLayout(self.tab4.layout3)
+        self.tab4.masterlayout.addLayout(self.tab4.layout1)
+        self.tab4.masterlayout.addLayout(self.tab4.layout2)
+        self.tab4.masterlayout.addLayout(self.tab4.layout3)
+        self.tab4.masterlayout.addLayout(self.tab4.layout4)
+        
+        self.tab4.setLayout(self.tab4.masterlayout)
         print("created Regions")
 
         # ---- Creates fifth tab
-        self.tab5.layout3 = QGridLayout()
+        self.tab5.masterlayout = QVBoxLayout()
+        self.tab5.layout1 = QGridLayout()
+        self.tab5.legend1 = QLabel("Spacing")
+        self.tab5.legend2 = QLabel("Type")
+        self.tab5.legend3 = QLabel("Param1")
+        self.tab5.legend4 = QLabel("Param2")
+        self.tab5.legend5 = QLabel("Param3")
+        
+        self.tab5.legend1.setFont(self.fontss)
+        self.tab5.legend2.setFont(self.fontss)
+        self.tab5.legend3.setFont(self.fontss)
+        self.tab5.legend4.setFont(self.fontss)
+        self.tab5.legend5.setFont(self.fontss)
+        
+        self.tab5.layout1.addWidget(self.tab5.legend1, 0, 0, QtCore.Qt.AlignCenter)
+        self.tab5.layout1.addWidget(self.tab5.legend2, 0, 1, QtCore.Qt.AlignCenter)
+        self.tab5.layout1.addWidget(self.tab5.legend3, 0, 2, QtCore.Qt.AlignCenter)
+        self.tab5.layout1.addWidget(self.tab5.legend4, 0, 3, QtCore.Qt.AlignCenter)
+        self.tab5.layout1.addWidget(self.tab5.legend5, 0, 4, QtCore.Qt.AlignCenter)
+    
+        self.tab5.layout2 = QGridLayout()
         tmp_arr1 = np.empty(shape=(self.regionbox.value(), 5), dtype=object)
         for i in range(self.regionbox.value()):  # create default number of tables...too
             tmp_arr1[i, 0] = QtWidgets.QLineEdit("0.0", self)
-            self.tab5.layout3.addWidget(tmp_arr1[i, 0], i+1, 0)
+            tmp_arr1[i, 0].setValidator(QtGui.QDoubleValidator())
+            self.tab5.layout2.addWidget(tmp_arr1[i, 0], i+1, 0)
             tmp_arr1[i, 1] = QtWidgets.QComboBox()
             tmp_arr1[i, 1].addItems(self.il7info[:])
-            self.tab5.layout3.addWidget(tmp_arr1[i, 1], i+1, 1)
+            self.tab5.layout2.addWidget(tmp_arr1[i, 1], i+1, 1)
             for j in range(3):
                 tmp_arr1[i, j+2] = QtWidgets.QLineEdit("0.0", self)
-                self.tab5.layout3.addWidget(tmp_arr1[i, j+2], i+1, j+2)
+                tmp_arr1[i, j+2].setValidator(QtGui.QDoubleValidator())
+                self.tab5.layout2.addWidget(tmp_arr1[i, j+2], i+1, j+2)
         self.il['Line8'] = tmp_arr1   # creates the Scan portion of the dictionary. only required for shock tube
-        self.tab5.setLayout(self.tab5.layout3)
+        self.tab5.masterlayout.addLayout(self.tab5.layout1)
+        self.tab5.masterlayout.addLayout(self.tab5.layout2)
+        self.tab5.layout1.setSpacing(0)
+        self.tab5.setLayout(self.tab5.masterlayout)
         print("created Scan")
 
         # ---- Creates sixth tab
-        self.tab6.layout3 = QGridLayout()
+        self.tab6.masterlayout = QVBoxLayout()
+        self.tab6.layout1 = QGridLayout()
+        self.tab6.legend11 = QLabel("Slit Profile")
+        self.tab6.legend12= QLabel("Base1")
+        self.tab6.legend13 = QLabel("Base2 (Trapezoid)")
+        self.tab6.legend11.setFont(self.fontss)
+        self.tab6.legend12.setFont(self.fontss)
+        self.tab6.legend13.setFont(self.fontss)
+        self.tab6.layout1.addWidget(self.tab6.legend11, 0, 0, QtCore.Qt.AlignCenter)
+        self.tab6.layout1.addWidget(self.tab6.legend12, 0, 1, QtCore.Qt.AlignCenter)
+        self.tab6.layout1.addWidget(self.tab6.legend13, 0, 2, QtCore.Qt.AlignCenter)
+        
+        self.tab6.layout2 = QGridLayout()
         tmp_arr1 = np.empty(shape=(self.regionbox.value(), 3), dtype=object)
 
         tmp_arr1[0, 0] = QtWidgets.QComboBox()
-        tmp_arr1[0, 0].addItem('Triangle')
-        tmp_arr1[0, 0].addItem('Trapezoid')
-        self.tab6.layout3.addWidget(tmp_arr1[0, 0], 0, 0)
+        tmp_arr1[0, 0].addItem('triangle')
+        tmp_arr1[0, 0].addItem('trapezoid')
+        self.tab6.layout2.addWidget(tmp_arr1[0, 0], 0, 0)
         tmp_arr1[0, 1] = QtWidgets.QLineEdit("0.0", self)
-        self.tab6.layout3.addWidget(tmp_arr1[0, 1], 0, 1)
+        tmp_arr1[0, 1].setValidator(QtGui.QDoubleValidator())
+        self.tab6.layout2.addWidget(tmp_arr1[0, 1], 0, 1)
         tmp_arr1[0, 2] = QtWidgets.QLineEdit("0.0", self)
-        self.tab6.layout3.addWidget(tmp_arr1[0, 2], 0, 2)
+        tmp_arr1[0, 2].setValidator(QtGui.QDoubleValidator())
+        self.tab6.layout2.addWidget(tmp_arr1[0, 2], 0, 2)
+        
+        self.tab6.layout3 = QGridLayout()
+        self.tab6.legend31 = QLabel("Line Type")
+        self.tab6.legend32 = QLabel("Param1")
+        self.tab6.legend33 = QLabel("Param2")
+        self.tab6.legend31.setFont(self.fontss)
+        self.tab6.legend32.setFont(self.fontss)
+        self.tab6.legend33.setFont(self.fontss)
+        self.tab6.layout3.addWidget(self.tab6.legend31, 0, 0, QtCore.Qt.AlignCenter)
+        self.tab6.layout3.addWidget(self.tab6.legend32, 0, 1, QtCore.Qt.AlignCenter)
+        self.tab6.layout3.addWidget(self.tab6.legend33, 0, 2, QtCore.Qt.AlignCenter)
+        
+        self.tab6.layout4 = QGridLayout()
         tmp_arr1[1, 0] = QtWidgets.QComboBox()
         tmp_arr1[1, 0].addItems(self.il7info[:])
-        self.tab6.layout3.addWidget(tmp_arr1[1, 0], 1, 0)
+        self.tab6.layout4.addWidget(tmp_arr1[1, 0], 1, 0)
         tmp_arr1[1, 1] = QtWidgets.QLineEdit("0.0", self)
-        self.tab6.layout3.addWidget(tmp_arr1[1, 1], 1, 1)
+        tmp_arr1[1, 1].setValidator(QtGui.QDoubleValidator())
+        self.tab6.layout4.addWidget(tmp_arr1[1, 1], 1, 1)
         tmp_arr1[1, 2] = QtWidgets.QLineEdit("0.0", self)
-        self.tab6.layout3.addWidget(tmp_arr1[1, 2], 1, 2)
+        tmp_arr1[1, 2].setValidator(QtGui.QDoubleValidator())
+        self.tab6.layout4.addWidget(tmp_arr1[1, 2], 1, 2)
+        
+        self.tab6.layout5 = QGridLayout()
+        self.tab6.legend51 = QLabel("Temporal Width")
+        self.tab6.legend51.setFont(self.fontss)
+        self.tab6.layout5.addWidget(self.tab6.legend51, 0, 0, QtCore.Qt.AlignCenter)
+        
+        self.tab6.layout6 = QGridLayout()
         tmp_arr1[2, 0] = QtWidgets.QLineEdit("0.0", self)
-        self.tab6.layout3.addWidget(tmp_arr1[2, 0], 2, 0)
+        tmp_arr1[2, 0].setValidator(QtGui.QDoubleValidator())
+        self.tab6.layout6.addWidget(tmp_arr1[2, 0], 2, 0)
         self.il['Line9'] = tmp_arr1   # creates the Scan portion of the dictionary. only required for shock tube
-        self.tab6.setLayout(self.tab6.layout3)
+        
+        self.tab6.masterlayout.addLayout(self.tab6.layout1)
+        self.tab6.masterlayout.addLayout(self.tab6.layout2)
+        self.tab6.masterlayout.addLayout(self.tab6.layout3)
+        self.tab6.masterlayout.addLayout(self.tab6.layout4)
+        self.tab6.masterlayout.addLayout(self.tab6.layout5)
+        self.tab6.masterlayout.addLayout(self.tab6.layout6)
+        self.tab6.setLayout(self.tab6.masterlayout)
         print("created Spatial Scan")
 
         # Add tabs to widget
@@ -586,44 +748,47 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
 
     def regionchange(self):
         count = self.regionbox.value()  # tables want
-        clayout = int((self.tab4.layout3.count()-1)/6)  # tables have(includes spinbox)
+        clayout = int((self.tab4.layout4.count())/6)  # tables have(includes spinbox)
         print("count is: ", count, "clayout is: ", clayout)
         if count < clayout:
             for k in range(6):
                 self.il['Line7'][clayout-1, k] = None  # the spacing is offset from that array loc by 1
-                regionToRemove = self.tab4.layout3.itemAtPosition(clayout, k).widget()
+                regionToRemove = self.tab4.layout4.itemAtPosition(clayout, k).widget()
                 regionToRemove.setParent(None)
-                self.tab4.layout3.removeWidget(regionToRemove)
+                self.tab4.layout4.removeWidget(regionToRemove)
             for kk in range(5):
                 self.il['Line8'][clayout-1, kk] = None
-                lineToRemove = self.tab5.layout3.itemAtPosition(clayout, kk).widget()
+                lineToRemove = self.tab5.layout2.itemAtPosition(clayout, kk).widget()
                 lineToRemove.setParent(None)
-                self.tab5.layout3.removeWidget(lineToRemove)
+                self.tab5.layout2.removeWidget(lineToRemove)
         elif count > clayout:
             self.il['Line7'] = np.resize(self.il['Line7'], [count, len(self.il6info)-1])  # resize the array to the count size with corresponding list length
             for j in range(6):
                 if j<2 or j == 3 or j == 5:
                     self.il['Line7'][count-1, j] = QtWidgets.QLineEdit("0.0", self)
-                    self.tab4.layout3.addWidget(self.il['Line7'][count-1, j], count, j)
+                    self.il['Line7'][count-1, j].setValidator(QtGui.QDoubleValidator())
+                    self.tab4.layout4.addWidget(self.il['Line7'][count-1, j], count, j)
                 if j == 2:
                     self.il['Line7'][count-1, j] = QtWidgets.QComboBox()
                     self.il['Line7'][count-1, j].addItems(self.il6info[2:4])
-                    self.tab4.layout3.addWidget(self.il['Line7'][count-1, j], count, j)
+                    self.tab4.layout4.addWidget(self.il['Line7'][count-1, j], count, j)
                 if j == 4:
                     self.il['Line7'][count-1, j] = QtWidgets.QCheckBox("R", self)
-                    self.tab4.layout3.addWidget(self.il['Line7'][count-1, j], count, j)
-            self.tab4.setLayout(self.tab4.layout3)
+                    self.tab4.layout4.addWidget(self.il['Line7'][count-1, j], count, j)
+            self.tab4.setLayout(self.tab4.masterlayout)
 
             self.il['Line8'] = np.resize(self.il['Line8'], [count, 5])
             self.il['Line8'][count-1, 0] = QtWidgets.QLineEdit("0.0", self)
-            self.tab5.layout3.addWidget(self.il['Line8'][count-1, 0], count, 0)
+            self.il['Line8'][count-1, 0].setValidator(QtGui.QDoubleValidator())
+            self.tab5.layout2.addWidget(self.il['Line8'][count-1, 0], count, 0)
             self.il['Line8'][count-1, 0] = QtWidgets.QComboBox()
             self.il['Line8'][count-1, 0].addItems(self.il7info[:])
-            self.tab5.layout3.addWidget(self.il['Line8'][count-1, 0], count, 1)
+            self.tab5.layout2.addWidget(self.il['Line8'][count-1, 0], count, 1)
             for j in range(3):
                 self.il['Line8'][count-1, j+2] = QtWidgets.QLineEdit("0.0", self)
-                self.tab5.layout3.addWidget(self.il['Line8'][count-1, j+2], count, j+2)
-            self.tab5.setLayout(self.tab5.layout3)
+                self.il['Line8'][count-1, j+2].setValidator(QtGui.QDoubleValidator())
+                self.tab5.layout2.addWidget(self.il['Line8'][count-1, j+2], count, j+2)
+            self.tab5.setLayout(self.tab5.masterlayout)
 
     def checkemalll(self):
         if self.allcheck.isChecked():
@@ -639,7 +804,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
 
     def display(self, i):
         self.Stack.setCurrentIndex(i)
-
+        
 class MyHelpWidget(QWidget):
    def __init__(self, parent):
         super(QWidget, self).__init__(parent)
