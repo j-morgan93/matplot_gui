@@ -33,7 +33,7 @@ class Window(QMainWindow):
         openAction.triggered.connect(self.openFileNameDialog)
         saveAction = QAction('&Save', self)
         saveAction.setShortcut('Ctrl+S')
-        saveAction.setStatusTip('Save File')
+        saveAction.setStatusTip('Save Input File')
         saveAction.triggered.connect(self.saveFileDialog)
         helpAction = QAction('&Help', self)
         helpAction.setShortcut('Ctrl+H')
@@ -395,30 +395,46 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.stack1.setLayout(layout)
 
     def stack2UI(self):  # THE LOS DATA CAPABILITY
-        layout = QGridLayout()
-        layout.setColumnStretch(1, 6)
-        layout.setColumnStretch(2, 6)
+        self.stack2.masterlayout = QtWidgets.QGridLayout()       
+        formGroupBox1 = QtWidgets.QGroupBox("Temperatures")
+        layout1 = QtWidgets.QFormLayout()
+        layout1.addRow(QLabel("Translational:"), QLineEdit())
+        layout1.addRow(QLabel("Vibrational:"), QLineEdit())
+        layout1.addRow(QLabel("Two-Temp?:"), QCheckBox())
+        formGroupBox1.setLayout(layout1)
 
-        # temps
-        layout.addWidget(QLineEdit(), 1, 4)
-        layout.addWidget(QLineEdit(), 2, 4)
-        layout.addWidget(QLineEdit(), 3, 4)
-        layout.addWidget(QLabel("T_trans"), 1, 3, QtCore.Qt.AlignCenter)
-        layout.addWidget(QLabel("T_vib"), 2, 3, QtCore.Qt.AlignCenter)
-        layout.addWidget(QLabel("T_el"), 3, 3, QtCore.Qt.AlignCenter)
-        layout.addWidget(QCheckBox(), 4, 4)
-        layout.addWidget(QLabel("T-Temp Model"), 4, 3)
-
-        # number densities
-        linedits = {}
-        if self.speclist:
-            for i in range(len(self.speclist)):
-                self.mylinedit = QtWidgets.QLineEdit("0.0")
-                linedits[i] = self.mylinedit
-                layout.addWidget(linedits[i], i, 1)
-                layout.addWidget(QLabel(self.speclist[i]), i, 0, QtCore.Qt.AlignRight)
-
-        self.stack2.setLayout(layout)
+        formGroupBox2 = QtWidgets.QGroupBox("Spectrum Species")
+        layout2 = QtWidgets.QFormLayout()
+        self.losnumbox= QtWidgets.QSpinBox(self)
+        self.losnumbox.setValue(4)
+        self.losnumbox.valueChanged.connect(self.loschange)
+        layout2.addRow(QLabel("Number of Species:"),self.losnumbox)
+        specerino = ["N", "O", "C", "H", "He", "Ar", "Fe", "Al", "Cr", "Cu", "K", "Mg", "Na", "Ni", "S", "Si",
+                     "N2", "N2+", "NO", "O2", "CN", "CO", "C2", "H2", "NH", "CH", "CO2", "C3", "MgO", "SiO" ]
+        self.mylinedit = QtWidgets.QLineEdit("0.0")
+        los_arr = np.empty(shape=(self.losnumbox.value(), 2), dtype=object)
+        for i in range(self.losnumbox.value()):  # create default number of tables
+            for j in range(2):
+                if j == 0:
+                    los_arr[i, j] = QtWidgets.QComboBox()
+                    los_arr[i, j].addItems(specerino[:])
+                    layout2.addRow(QLabel("Species "+str(i+1)),los_arr[i, j])
+                if j == 1:
+                    los_arr[i, j] = QtWidgets.QLineEdit("0.0", self)
+                    layout2.addRow(QLabel("Number Density "+str(i+1)),los_arr[i, j])
+        formGroupBox2.setLayout(layout2)
+        
+        formGroupBox3 = QtWidgets.QGroupBox("Ranges")
+        layout3 = QtWidgets.QFormLayout()
+        layout3.addRow(QLabel("Temperature (+/-K):"), QLineEdit())
+        layout3.addRow(QLabel("Number Density (+/-)E:"), QLineEdit())
+        formGroupBox3.setLayout(layout3)
+        
+        self.stack2.masterlayout.addWidget(formGroupBox1,0,0)
+        self.stack2.masterlayout.addWidget(formGroupBox2,0,1)
+        self.stack2.masterlayout.addWidget(formGroupBox3,1,0,1,2)
+        
+        self.stack2.setLayout(self.stack2.masterlayout)
 
     def stack3UI(self):  # THE NEQAIR MODEL INPUT CAPABILITY
     # TABS---------------------------------
@@ -521,7 +537,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         print("created State Population")
         self.il['Line3'][1, 2].setCurrentIndex(2)
         self.il['Line3'][1, 2].currentIndexChanged.connect(self.combofloat)
-        self.il['Line2'][1, 0].clicked.connect(self.tabshow)
+        #self.il['Line2'][1, 0].clicked.connect(self.tabshow)
         
         # ---- Create second tab
         
@@ -859,7 +875,12 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
                     xcount += 1
             self.il['Line6'] = tmp_arrb  # The press buttons for each species
             self.il['Line6CB'] = tmp_arrcb  # the check buttons for each species
-
+    def loschange(self):
+        print("my value chaanged!")
+        count = self.losnumbox.value()  # tables want
+        clayout = int((self.tab4.layout4.count())/6)  # tables have(includes spinbox)
+        
+        print("count is: ", count, "clayout is: ", clayout)
     def regionchange(self):
         count = self.regionbox.value()  # tables want
         clayout = int((self.tab4.layout4.count())/6)  # tables have(includes spinbox)
@@ -929,9 +950,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             self.il['Line3'][1, 3].show()
         else:
             self.il['Line3'][1, 3].hide()
-            
-    def checkshow(self,):
-        
+                   
         
 
 def main():
