@@ -1,24 +1,36 @@
-15.0
-***************************
-NEQAIR Input File Template
-For versions newer than 14.0, the version number is listed on the first line
-The inputs are separated below, each section enclosed by ----'s
-The first line in the section is a description
-The second line is read by NEQAIR as a character sequence
-In some cases additional lines may follow
-A blank line ends the input section
-Following lines are used for comments and ignored by the code
-***************************
-Line 0: Header - anything between here and the ---'s writes to stdout
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa <- 1st format line
---------------------------
-Line 1: Database path - if empty, looks for local DATABASES directory
-/share/apps/neqair/v15.0-prerelease/DATABASES
--------------------------
-Line 2: Output type : a string of letters indicating one or more output files
+NeQtPy Help File V0.1
+************************************
+This document is hopefullly going to help navigate some of the features that are available
+in NeQtPy3 or atleast explain the purpose and utilization of the 3 main functions of this
+program. First and foremost, the GUI is designed the eliminate the user's need to edit
+files, worrying about format (if that ever mattered in the first place) and allow for some simple
+post-processing through the plot tool. The next main feature under development is to allow the user
+to perform some fitting to experimental (or not) results in the hopes of determing the chemical
+composition and temperature of the spectrum plotted.
+************************************
+
+######SECTION1-PLOTTING#####################
+This is pretty self-explanatory. The plotting tool is taken from Matplot and with some widgets 
+the user is allowed to open up any of the result outputs from NEQAIR and plot any two columns against
+one another, with line-style modification, and the ability to save the figure as any one of the
+standard picture formats. There may be some extension to legends, co-plotting, and data constrainment
+in the future.
+######SECTION2-FITTING######################
+The second tab contains the fitting feature of the GUI where the users specifies a guess (either 
+initial or revised) to the chemical composition, and temperature of the spectrum. The model will then
+create an LOS.dat file to be run in shocktube mode with a variance of temperatures and number densities
+within a confidence interval that should result in a reccomendation of the best fit or new guess range
+to the user.
+######SECTION3-FILE READ/WRITE##############
+In this section lies all of the ability of the GUI to read in a file and populate fields from a
+previously generated NEQAIR.inp file, or the ability to write out a new file based on user input and
+selection of bands from a selected LOS.dat file. Incase the boxes, fields and such do not make sense,
+a sample file from the V15.0 NEQAIR.inp is presented below:
+
+File Output type : a string of letters indicating one or more output files
 ILMS    
 
-Allowed input choices for line 2:
+Allowed input choices for File Output type:
 (I)ntensity.out - write intensity vs. wavelength (high resolution)
 Intensity_(S)canned.out - write the scanned intensity v. wavelength file
 (L)OS.out - write radiance versus position on the normal line of sight
@@ -29,10 +41,10 @@ Intensity_(S)canned.out - write the scanned intensity v. wavelength file
 (M) write general messages to stdout
 
 --------------------------
-Line 3: State population method
+State population method
 N Q L      1.
 
-Allowed input for Line 3:
+Allowed input for State population method:
 (B) Boltzmann
 (N) Non-Boltzmann followed by (optionally) non-boltzmann method and (required) absorption method.
     Valid choices for method are:
@@ -52,10 +64,10 @@ Allowed input for Line 3:
 If different settings are desired for molecules and atoms, include a second line for molecules
 
 --------------------------
-Line 4: Geometry
+Geometry
  T
 
-Allowed input for Line 4:
+Allowed input for Geometry:
 (T) Tangent Slab - calculate tangent slab heat flux
 (C) Spherical Cap - follow with two floats for Rnose and Shock Div
 (S) Shock Tube - follow with a float for tube diameter
@@ -65,7 +77,7 @@ Allowed input for Line 4:
 (X) Perform scan on existing intensity.out (S must be selected on Line 2)
 
 --------------------------
-Line 5: Boundary Conditions
+Boundary Conditions
  N
  B
 
@@ -83,7 +95,7 @@ Use 'B' if only the incident radiance/flux is desired
 This value does however, materially affect the calculation for Non-local populations
 
 --------------------------
-Line 6: Bands
+Bands (loaded from LOS.dat)
 I
 N       
 O       
@@ -97,9 +109,7 @@ O
  O2 SR   
 
 Allowed input:
-(A) Include all bands/features that match species list
-(O) Omit selected bands or features
-(I) Include only selected bands or features
+(I) Include only selected bands or features (preselected in GUI)
 
 If (O) or (I) is selected, follow with the following (optionally on separate lines):
 N, O, C, H, He, Ar, Fe, Al, Cr, Cu, K, Mg, Na, Ni, S, Si - available atoms
@@ -117,7 +127,7 @@ MgO - B-X, B-A
 SiO - X-A, A-E
 
 ---------------------------
-Line 7: Regions
+Regions
    855.50  2000.00 A 10 R 600
   2000.00  6350.00 A 10 R 50
   6350.00 16000.00 A 10 R 50
@@ -132,7 +142,7 @@ Points per Line for Auto
 The next parameter is an optional "Range", with dd being the range value
 
 ----------------------------
-Line 8 : Scan (Only required if S selected on Line2)
+Scan (Only required if S selected on Line2)
  0.10  Voigt 6.000 0.000      2.
  0.10  Voigt 6.000 0.000      2.
  0.10  Voigt 6.000 0.000      2.
@@ -145,7 +155,7 @@ Type is the scan type (ICCD1, ICCD2, Voigt, SGauss)
 Param-list is a list of scan parameterizations, generally is 2 or 3 float values
 
 ----------------------------
-Line 9 : Spatial Scan (Optional - ShockTube mode only)
+Spatial Scan (Optional - ShockTube mode only)
 tri 1.0
 ICCD1 1.0 0.1
 1.0
