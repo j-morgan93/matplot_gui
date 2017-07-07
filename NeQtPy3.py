@@ -27,14 +27,17 @@ class Window(QMainWindow):
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit/Terminate application')
         exitAction.triggered.connect(self.close)
-        openAction = QAction('&Open', self)
+        openAction = QAction('&Open Input File', self)
         openAction.setShortcut('Ctrl+O')
-        openAction.setStatusTip('Open File')
+        openAction.setStatusTip('Open Input File')
         openAction.triggered.connect(self.openFileNameDialog)
-        saveAction = QAction('&Save', self)
+        saveAction = QAction('&Save Input File', self)
         saveAction.setShortcut('Ctrl+S')
         saveAction.setStatusTip('Save Input File')
         saveAction.triggered.connect(self.saveFileDialog)
+        losAction = QAction('&Generate Input File', self)
+        losAction.setStatusTip('Generate LOS File')
+        losAction.triggered.connect(self.genLOSFile)
         helpAction = QAction('&Help', self)
         helpAction.setShortcut('Ctrl+H')
         helpAction.setStatusTip('Help')
@@ -48,11 +51,13 @@ class Window(QMainWindow):
         fileMenu.addAction(exitAction)
         fileMenu.addAction(openAction)
         fileMenu.addAction(saveAction)
+        fileMenu.addAction(losAction)
         fileMenu.addAction(helpAction)
         toolbar = self.addToolBar('Exit')
         toolbar.addAction(exitAction)
         toolbar.addAction(openAction)
         toolbar.addAction(saveAction)
+        toolbar.addAction(losAction)
         toolbar.addAction(helpAction)
         self.content = Widgettown(self)
         self.setCentralWidget(self.content)
@@ -176,6 +181,17 @@ class Window(QMainWindow):
         msgbox.updateGeometry()
         msgbox.setWindowModality(QtCore.Qt.ApplicationModal)
         msgbox.exec_()
+
+    def genLOSFile(self):
+        name = QFileDialog.getSaveFileName(self, "Save File", "", "All Files(*);;Input Files(*.dat)")
+        print("Writing LOS out to:", name[0])
+        f = open(name[0], 'w')
+        f.write("#15.0\n#\n\n")
+        ind = self.content.los['Species'][0,0].currentIndex()
+        f.write("n\t\t\t\t x\t\t\t\t ntot\t\t\t\t Tt\t\t\t\t "+self.content.los['Species'][0,0].itemText(ind)+"\n")
+        for i in range(2*int(self.content.los['Fitting'][2,0].text())):
+            f.write(str(i+1)+"\t\t\t\t "+str(i*0.5E+0)+"\t\t\t\t "+str(0.5E+18)+"\t\t\t\t "+str((i*float(self.content.los['Fitting'][0,0].text())
+            -float(self.content.los['Fitting'][0,0].text())*float(self.content.los['Fitting'][2,0].text())+float(self.content.los['Temperature'].text())))+"\t\t\t\t "+str(0.5E+18)+"\n")
         
     def saveFileDialog(self):  # MASTER WRITE CAPABILITY
         name = QFileDialog.getSaveFileName(self, "Save File", "", "All Files(*);;Input Files(*.inp)")
@@ -395,10 +411,16 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.stack1.setLayout(layout)
 
     def stack2UI(self):  # THE LOS DATA CAPABILITY
+        self.los = {}
+        los_tmp = np.empty(shape=(1, 1), dtype=object)
         self.stack2.masterlayout = QtWidgets.QGridLayout()       
         formGroupBox1 = QtWidgets.QGroupBox("Temperatures")
         layout1 = QtWidgets.QFormLayout()
-        layout1.addRow(QLabel("Translational:"), QLineEdit())
+        los_tmp[0, 0] =  QLineEdit("0.0", self)
+        
+        layout1.addRow(QLabel("Translational:"), los_tmp[0, 0])
+        
+        self.los['Temperature'] = los_tmp[0, 0]
         layout1.addRow(QLabel("Vibrational:"), QLineEdit())
         layout1.addRow(QLabel("Two-Temp?:"), QCheckBox())
         formGroupBox1.setLayout(layout1)
@@ -406,33 +428,43 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         formGroupBox2 = QtWidgets.QGroupBox("Spectrum Species")
         layout2 = QtWidgets.QFormLayout()
         self.losnumbox= QtWidgets.QSpinBox(self)
-        self.losnumbox.setValue(4)
+        self.losnumbox.setValue(1)
+        self.los['SpecNum'] = self.losnumbox
         self.losnumbox.valueChanged.connect(self.loschange)
         layout2.addRow(QLabel("Number of Species:"),self.losnumbox)
-        specerino = ["N", "O", "C", "H", "He", "Ar", "Fe", "Al", "Cr", "Cu", "K", "Mg", "Na", "Ni", "S", "Si",
-                     "N2", "N2+", "NO", "O2", "CN", "CO", "C2", "H2", "NH", "CH", "CO2", "C3", "MgO", "SiO" ]
+        allspec = ["N", "O", "C", "H", "He", "Ar", "Fe", "Al", "Cr", "Cu", "K",
+                   "Mg", "Na", "Ni", "S", "Si", "N2", "N2+", "NO", "O2", "CN",
+                   "CO", "C2", "H2", "NH", "CH", "CO2", "C3", "MgO", "SiO" ]
         self.mylinedit = QtWidgets.QLineEdit("0.0")
-        los_arr = np.empty(shape=(self.losnumbox.value(), 2), dtype=object)
+        los_tmp = np.empty(shape=(self.losnumbox.value(), 2), dtype=object)
         for i in range(self.losnumbox.value()):  # create default number of tables
             for j in range(2):
                 if j == 0:
-                    los_arr[i, j] = QtWidgets.QComboBox()
-                    los_arr[i, j].addItems(specerino[:])
-                    layout2.addRow(QLabel("Species "+str(i+1)),los_arr[i, j])
+                    los_tmp[i, j] = QtWidgets.QComboBox()
+                    los_tmp[i, j].addItems(allspec[:])
+                    layout2.addRow(QLabel("Species "+str(i+1)), los_tmp[i, j])
                 if j == 1:
-                    los_arr[i, j] = QtWidgets.QLineEdit("0.0", self)
-                    layout2.addRow(QLabel("Number Density "+str(i+1)),los_arr[i, j])
+                    los_tmp[i, j] = QtWidgets.QLineEdit("0.0", self)
+                    layout2.addRow(QLabel("Number Density "+str(i+1)), los_tmp[i, j])
         formGroupBox2.setLayout(layout2)
+        self.los['Species'] = los_tmp
         
         formGroupBox3 = QtWidgets.QGroupBox("Ranges")
         layout3 = QtWidgets.QFormLayout()
-        layout3.addRow(QLabel("Temperature (+/-K):"), QLineEdit())
-        layout3.addRow(QLabel("Number Density (+/-)E:"), QLineEdit())
+        los_tmp = np.empty(shape=(3, 1), dtype=object)
+        for i in range(len(los_tmp)):
+            los_tmp[i] = QLineEdit("0.0", self)
+            
+        layout3.addRow(QLabel("Temperature (+/-K):"), los_tmp[0, 0])
+        layout3.addRow(QLabel("Number Density (+/-)E:"), los_tmp[1, 0])
+        layout3.addRow(QLabel("Number of Intervals :"), los_tmp[2, 0])
+        self.los['Fitting'] = los_tmp
+        
         formGroupBox3.setLayout(layout3)
         
-        self.stack2.masterlayout.addWidget(formGroupBox1,0,0)
-        self.stack2.masterlayout.addWidget(formGroupBox2,0,1)
-        self.stack2.masterlayout.addWidget(formGroupBox3,1,0,1,2)
+        self.stack2.masterlayout.addWidget(formGroupBox1, 0, 0)
+        self.stack2.masterlayout.addWidget(formGroupBox2, 0, 1)
+        self.stack2.masterlayout.addWidget(formGroupBox3, 1, 0, 1, 2)
         
         self.stack2.setLayout(self.stack2.masterlayout)
 
