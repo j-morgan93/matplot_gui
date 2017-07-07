@@ -162,8 +162,21 @@ class Window(QMainWindow):
                                                 
 
     def helpFileDialog(self):
-        self.helpfile = MyHelpWidget(self)
-
+        
+        msgbox = QtWidgets.QDialog()
+        text=open('help.txt').read()
+        msgbox.setWindowTitle("Help File")
+        msg = QtWidgets.QTextEdit(msgbox)
+        msg.resize(700,700)
+        msg.updateGeometry()
+        msg.setText(text)
+        msg.setReadOnly(True)
+        
+        msgbox.resize(700,700)
+        msgbox.updateGeometry()
+        msgbox.setWindowModality(QtCore.Qt.ApplicationModal)
+        msgbox.exec_()
+        
     def saveFileDialog(self):  # MASTER WRITE CAPABILITY
         name = QFileDialog.getSaveFileName(self, "Save File", "", "All Files(*);;Input Files(*.inp)")
         print("Writing out to:", name[0])
@@ -445,7 +458,9 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.tabs.addTab(self.tab4, "Regions")
         self.tabs.addTab(self.tab5, "Scan Style")
         self.tabs.addTab(self.tab6, "Spatial Scan")
-
+        self.tabs.setMovable(True)
+        
+        
         # Create first tab - Generic File information(sim type and such)
         self.tab1.masterlayout = QVBoxLayout()
         self.tab1.layout1 = QGridLayout()
@@ -506,7 +521,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         print("created State Population")
         self.il['Line3'][1, 2].setCurrentIndex(2)
         self.il['Line3'][1, 2].currentIndexChanged.connect(self.combofloat)
-        
+        self.il['Line2'][1, 0].clicked.connect(self.tabshow)
         
         # ---- Create second tab
         
@@ -914,15 +929,10 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             self.il['Line3'][1, 3].show()
         else:
             self.il['Line3'][1, 3].hide()
-
+            
+    def checkshow(self,):
         
-class MyHelpWidget(QWidget):
-   def __init__(self, parent):
-        super(QWidget, self).__init__(parent)
-        text_edit = QtWidgets.QPlainTextEdit()
-        text=open('help.txt').read()
-        text_edit.setPlainText(text)
-        self.show()
+        
 
 def main():
     app = QApplication(sys.argv)
