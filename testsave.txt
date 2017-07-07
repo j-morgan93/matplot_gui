@@ -1,3 +1,72 @@
-N
-N+
-NO
+15.0
+**********
+**********
+Line 0: Header - anything between here and the ---'s writes to stdout
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa <- 1st format line
+--------------------------
+Line 1: Database Path
+/share/apps/neqair/v15.0-prerelease/DATABASES
+--------------------------
+Line 2:
+ I S L M
+
+-------------------
+Line 3:
+N Q L 1.
+
+
+-------------------
+Line 4:
+T
+
+-------------------
+Line 5:
+ N
+ B
+
+
+-------------------
+Line 6:
+I
+N bb
+N bf
+N ff
+N2 1+
+N2 2+
+N2 BH2
+N2 LBH
+N2 BH1
+N2 WJ
+N2 CY
+NO beta
+NO gam
+NO del
+NO eps
+NO bp
+NO gp
+NO IR
+O bb
+O bf
+O ff
+O2 SR
+
+-------------------
+Line 7:
+ 855.50 2000.00 A 10 R 600
+ 2000.00 6350.00 A 10 R 50
+ 6350.00 16000.00 A 10 R 50
+ 16000.00 39600.00 A 10 R 25
+
+-------------------
+Line 8:
+ 0.10 Voigt 6.000 0.000 2.
+ 0.10 Voigt 6.000 0.000 2.
+ 0.10 Voigt 6.000 0.000 2.
+ 0.10 Voigt 6.000 0.000 2.
+
+-------------------
+Line 9:
+ triangle 1.0 0.0
+ ICCD1 1.0 0.1
+ 1.0
+
