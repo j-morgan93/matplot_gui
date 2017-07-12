@@ -187,11 +187,18 @@ class Window(QMainWindow):
         print("Writing LOS out to:", name[0])
         f = open(name[0], 'w')
         f.write("#15.0\n#\n\n")
-        ind = self.content.los['Species'][0,0].currentIndex()
-        f.write("n        x        ntot        Tt        "+self.content.los['Species'][0,0].itemText(ind))
+        f.write("n        x        ntot        Tt        ")
+        for i in range(0, self.content.los['SpecNum'].value()):
+            ind = self.content.los['Species'][i, 0].currentIndex()
+            f.write("        "+self.content.los['Species'][i, 0].itemText(ind))
+        count = 1   
         for i in range(2*int(self.content.los['Fitting'][2,0].text())):
-            f.write("\n"+str(i+1)+"        "+str(i*0.5E+0)+"        "+str(0.5E+18)+"        "+str((i*float(self.content.los['Fitting'][0,0].text())
-            -float(self.content.los['Fitting'][0,0].text())*float(self.content.los['Fitting'][2,0].text())+float(self.content.los['Temperature'].text())))+"        "+str(0.5E+18))
+            if self.content.los['SpecNum'].value() > 1:
+                for j in range(5):
+                    f.write("\n"+str(count)+"        "+str((count)*0.5)+"        "+str(3E+17)+"        "+str((i*float(self.content.los['Fitting'][0,0].text())
+                    -float(self.content.los['Fitting'][0,0].text())*float(self.content.los['Fitting'][2,0].text())+float(self.content.los['Temperature'].text())))+"        "+str(3E+17-j*.2*3E+17)
+                    +"        "+str(j*.2*3E+17))
+                    count += 1
         
     def saveFileDialog(self):  # MASTER WRITE CAPABILITY
         name = QFileDialog.getSaveFileName(self, "Save File", "", "All Files(*);;Input Files(*.inp)")
@@ -428,7 +435,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         formGroupBox2 = QtWidgets.QGroupBox("Spectrum Species")
         layout2 = QtWidgets.QFormLayout()
         self.losnumbox= QtWidgets.QSpinBox(self)
-        self.losnumbox.setValue(1)
+        self.losnumbox.setValue(2)
         self.los['SpecNum'] = self.losnumbox
         self.losnumbox.valueChanged.connect(self.loschange)
         layout2.addRow(QLabel("Number of Species:"),self.losnumbox)
@@ -826,7 +833,6 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
 
         # FUNCTIONS-------------------------------------------------
     def readplot(self):  # OPENING AND READING FIGURE IN
-        self.figure.clf()
         self.colchange1.clear()  # clear the previous plot datas entires
         self.colchange2.clear()  # clear the previous plot datas entires
         datafile, __ = QFileDialog.getOpenFileName(self, "Open File", "", "All Files(*)")
@@ -834,7 +840,6 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             datafile = str(datafile)
             try:
                 self.plotfile =np.genfromtxt(datafile, comments='#', skip_header=3, names=True, unpack=True, autostrip=True)
-                print(self.plotfile)
                 sax = self.figure.add_subplot(111)  # adds figure as a subplot. might be nice to use this to allow user to plot multiple things.
                 sax.plot(self.plotfile[self.plotfile.dtype.names[0]], self.plotfile[self.plotfile.dtype.names[1]], '*-')  # need controls for one vs. another
                 self.colchange1.addItems(self.plotfile.dtype.names[:])
