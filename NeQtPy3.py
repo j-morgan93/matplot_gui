@@ -8,8 +8,9 @@ Created on Sat Jun 24 10:03:22 2017
 import sys
 import re
 from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtWidgets import QWidget, QStackedWidget, QListWidget, QApplication,\
- QLineEdit, QCheckBox, QLabel, QAction, QMainWindow, QFileDialog, QGridLayout, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QStackedWidget, QApplication,\
+ QLineEdit, QCheckBox, QLabel, QAction, QMainWindow, QFileDialog, QGridLayout, QVBoxLayout,\
+ QGroupBox, QFormLayout, QSpinBox
 
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -361,29 +362,33 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.fontss.setBold(True)
         self.fontss.setUnderline(True)
         
-        self.leftlist = QListWidget()
-        self.leftlist.insertItem(0, 'Plots')
-        self.leftlist.insertItem(1, 'Spectral Fit - Generate LOS file')
-        self.leftlist.insertItem(2, 'NEQAIR Simulation Input')
-
+        self.leftlist = QtWidgets.QComboBox()
+        # self.leftlist.insertItem(0, 'Plots')
+        self.leftlist.addItem('Spectral Fitting')
+        self.leftlist.addItem('NEQAIR Input')
+        self.leftlist.setMaximumWidth(500)
+        
         self.stack1 = QWidget()
+        self.stack1.setMinimumSize(768,432)
         self.stack2 = QWidget()
+        self.stack2.setMaximumWidth(500)
         self.stack3 = QWidget()
-
+        self.stack3.setMaximumWidth(500)
+                                    
         self.stack1UI()
         self.stack2UI()
         self.stack3UI()
 
         self.Stack = QStackedWidget(self)
-        self.Stack.addWidget(self.stack1)
+        # self.Stack.addWidget(self.stack1)
         self.Stack.addWidget(self.stack2)
         self.Stack.addWidget(self.stack3)
-        hbox = QtWidgets.QHBoxLayout(self)
-        hbox.addWidget(self.leftlist)
-        hbox.addWidget(self.Stack)
-
-        self.setLayout(hbox)
-        self.leftlist.currentRowChanged.connect(self.display)
+        gbox = QtWidgets.QGridLayout(self)
+        gbox.addWidget(self.leftlist, 0, 0)
+        gbox.addWidget(self.Stack, 1,0)
+        gbox.addWidget(self.stack1,0,1,2,2)
+        self.setLayout(gbox)
+        self.leftlist.currentIndexChanged.connect(self.display)
         self.show()
 
     def stack1UI(self):  # THE PLOTTING CAPABILITY
@@ -421,7 +426,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.los = {}
         los_tmp = np.empty(shape=(1, 1), dtype=object)
         self.stack2.masterlayout = QtWidgets.QGridLayout()       
-        formGroupBox1 = QtWidgets.QGroupBox("Temperatures")
+        formGroupBox1 = QGroupBox("Temperatures")
         layout1 = QtWidgets.QFormLayout()
         los_tmp[0, 0] =  QLineEdit("0.0", self)
         
@@ -432,9 +437,9 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         layout1.addRow(QLabel("Two-Temp?:"), QCheckBox())
         formGroupBox1.setLayout(layout1)
 
-        formGroupBox2 = QtWidgets.QGroupBox("Spectrum Species")
-        layout2 = QtWidgets.QFormLayout()
-        self.losnumbox= QtWidgets.QSpinBox(self)
+        formGroupBox2 = QGroupBox("Spectrum Species")
+        layout2 = QFormLayout()
+        self.losnumbox= QSpinBox(self)
         self.losnumbox.setValue(2)
         self.los['SpecNum'] = self.losnumbox
         self.losnumbox.valueChanged.connect(self.loschange)
@@ -457,7 +462,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.los['Species'] = los_tmp
         
         formGroupBox3 = QtWidgets.QGroupBox("Ranges")
-        layout3 = QtWidgets.QFormLayout()
+        layout3 = QFormLayout()
         los_tmp = np.empty(shape=(3, 1), dtype=object)
         for i in range(len(los_tmp)):
             los_tmp[i] = QLineEdit("0.0", self)
@@ -474,7 +479,8 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.stack2.masterlayout.addWidget(formGroupBox3, 1, 0, 1, 2)
         
         self.stack2.setLayout(self.stack2.masterlayout)
-
+        del los_tmp
+        
     def stack3UI(self):  # THE NEQAIR MODEL INPUT CAPABILITY
     # TABS---------------------------------
         self.il2info = ["(I)ntensity.out", "Intensity_(S)canned.out",
@@ -507,7 +513,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.tab5 = QWidget()
         self.tab6 = QWidget()
 
-        self.tabs.addTab(self.tab1, "File Setup")  # Add tabs
+        self.tabs.addTab(self.tab1, "Outputs and Calc-style")  # Add tabs
         self.tabs.addTab(self.tab2, "Species Information")
         self.tabs.addTab(self.tab3, "Geometry \& Boundary Conditions")
         self.tabs.addTab(self.tab4, "Regions")
@@ -517,60 +523,47 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         
         
         # Create first tab - Generic File information(sim type and such)
-        self.tab1.masterlayout = QVBoxLayout()
+        self.tab1.masterlayout = QGridLayout()
         self.tab1.layout1 = QGridLayout()
-        self.tab1.legend1 = QLabel("File Outputs")
-        self.tab1.legend2 = QLabel("Format Specifics")
-        self.tab1.legend2.setFont(self.fontss)
-        self.tab1.legend1.setFont(self.fontss)
-        self.tab1.layout1.addWidget(self.tab1.legend1, 0, 0, QtCore.Qt.AlignCenter)
-        self.tab1.layout1.addWidget(self.tab1.legend2, 0, 1, QtCore.Qt.AlignCenter)
+        self.tab1.group1 = QtWidgets.QGroupBox("File Output(s)")
         self.tab1.layout2 = QGridLayout()
+        self.tab1.group2 = QtWidgets.QGroupBox("Calculation Method")
         
-        count = 0
         tmp_arr = np.empty(shape=(len(self.il2info), 2), dtype=object)
         for i in range(7):  # INPUT LINE 2
             tmp_arr[i, 0] = QtWidgets.QCheckBox(self.il2info[i], self)
-            self.tab1.layout2.addWidget(tmp_arr[i, 0], i+1, 0)
+            self.tab1.layout1.addWidget(tmp_arr[i, 0], i+1, 0)
             if "(I)" in self.il2info[i] or "(S)" in self.il2info[i]:
                 tmp_arr[i, 1] = QtWidgets.QCheckBox("(2)Column Format?", self)
-                self.tab1.layout2.addWidget(tmp_arr[i, 1], i+1, 2)
-                count+= 1
-            count+= 1
+                self.tab1.layout1.addWidget(tmp_arr[i, 1], i+1, 2)
         self.il['Line2'] = tmp_arr  # Creates the OutPut type dictionary section
+        self.tab1.group1.setLayout(self.tab1.layout1)
+        
         print("created FileOutput")
-        self.tab1.layout3 = QGridLayout()
-        self.tab1.legend3 = QLabel("State Population Methods")
-        self.tab1.legend4 = QLabel("Method Specifics")
-        self.tab1.legend3.setFont(self.fontss)
-        self.tab1.legend4.setFont(self.fontss)      
-        self.tab1.layout3.addWidget(self.tab1.legend3, 0, 0, QtCore.Qt.AlignCenter)
-        self.tab1.layout3.addWidget(self.tab1.legend4, 0, 1, QtCore.Qt.AlignCenter)
-        self.tab1.layout4 = QGridLayout()
         tmp_arr = np.empty(shape=(5, 4), dtype=object)
         for i in range(5):  # INPUT LINE 3
             if i < 2:
                 tmp_arr[i, 0] = QtWidgets.QCheckBox(self.il3info[i], self)
-                self.tab1.layout4.addWidget(tmp_arr[i, 0], count+i+1, 0)
+                self.tab1.layout2.addWidget(tmp_arr[i, 0], i+1, 0)
                 if "Non-B" in self.il3info[i]:  # Filling the combo boxes out and adding to dict
                     tmp_arr[i, 1] = QtWidgets.QComboBox()
                     tmp_arr[i, 1].addItem("--optional--")
                     tmp_arr[i, 1].addItems(self.il3info[2:5])
                     tmp_arr[i, 2] = QtWidgets.QComboBox()
                     tmp_arr[i, 2].addItems(self.il3info[6:10])
-                    self.tab1.layout4.addWidget(tmp_arr[i, 1], count+i+1, 2)
-                    self.tab1.layout4.addWidget(tmp_arr[i, 2], count+i+1, 3)
+                    self.tab1.layout2.addWidget(tmp_arr[i, 1], i+1, 2)
+                    self.tab1.layout2.addWidget(tmp_arr[i, 2], i+1, 3)
                     tmp_arr[i ,3] = QtWidgets.QLineEdit("0.0",self)
-                    tmp_arr[i, 3].setFixedWidth(50)
+                    tmp_arr[i, 3].setMaximumWidth(50)
                     tmp_arr[i, 3].setValidator(QtGui.QDoubleValidator())
-                    self.tab1.layout4.addWidget(tmp_arr[i, 3], count+i+1, 4)
+                    self.tab1.layout2.addWidget(tmp_arr[i, 3], i+1, 4)
             if i >= 2:
                 tmp_arr[i, 0]= QtWidgets.QCheckBox(self.il3info[i+8], self)
-                self.tab1.layout4.addWidget(tmp_arr[i, 0], count+i+1, 0)
-        self.tab1.masterlayout.addLayout(self.tab1.layout1)
-        self.tab1.masterlayout.addLayout(self.tab1.layout2)
-        self.tab1.masterlayout.addLayout(self.tab1.layout3)
-        self.tab1.masterlayout.addLayout(self.tab1.layout4)
+                self.tab1.layout2.addWidget(tmp_arr[i, 0], i+1, 0)
+        self.tab1.group2.setLayout(self.tab1.layout2)  
+        
+        self.tab1.masterlayout.addWidget(self.tab1.group1, 0, 0)
+        self.tab1.masterlayout.addWidget(self.tab1.group2, 1, 0)
         self.tab1.setLayout(self.tab1.masterlayout)
         self.il['Line3'] = tmp_arr  # creates the State Pop Method Dictionary section
         print("created State Population")
@@ -587,87 +580,78 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
 
         # ---- Create third tab
         self.tab3.masterlayout = QGridLayout()
+        self.tab3.group1 = QGroupBox("Geometry")
         self.tab3.layout1mod = QVBoxLayout()
         self.tab3.layout1 = QGridLayout()
-        self.tab3.legend1 = QLabel("Geometry")
-        self.tab3.legend1.setFont(self.fontss)
-        self.tab3.layout1.addWidget(self.tab3.legend1, 0, 0, 1, -1, QtCore.Qt.AlignCenter)
         
         tmp_arr = np.empty(shape=(len(self.il4info), 3), dtype=object)
         for i in range(len(self.il4info)):  # INPUT LINE 4
             tmp_arr[i, 0] = QtWidgets.QCheckBox(self.il4info[i], self)
-            self.tab3.layout1.addWidget(tmp_arr[i, 0], i+1, 0, 1, 1)
+            self.tab3.layout1.addWidget(tmp_arr[i, 0], i, 0, 1, 1)
             if "(C)" in self.il4info[i]:
                 tmp_arr[i, 1] = QtWidgets.QLineEdit("0.0", self)
                 tmp_arr[i, 2] = QtWidgets.QLineEdit("0.0", self)
-                tmp_arr[i, 1].setFixedWidth(50)
-                tmp_arr[i, 2].setFixedWidth(50)
+                tmp_arr[i, 1].setMaximumWidth(50)
+                tmp_arr[i, 2].setMaximumWidth(50)
                 
-                self.tab3.layout1.addWidget(tmp_arr[i, 1], i+1, 1, 1, 1)
-                self.tab3.layout1.addWidget(tmp_arr[i, 2], i+1, 2, 1, 1)
+                self.tab3.layout1.addWidget(tmp_arr[i, 1], i, 1, 1, 1)
+                self.tab3.layout1.addWidget(tmp_arr[i, 2], i, 2, 1, 1)
             if "(S)" in self.il4info[i]:
                 tmp_arr[i, 1] = QtWidgets.QLineEdit("0.0", self)
-                tmp_arr[i, 1].setFixedWidth(50)
-                self.tab3.layout1.addWidget(tmp_arr[i, 1], i+1, 1, 1, 1)
+                tmp_arr[i, 1].setMaximumWidth(50)
+                self.tab3.layout1.addWidget(tmp_arr[i, 1], i, 1, 1, 1)
             if "(B)" in self.il4info[i]:
                 tmp_arr[i, 1] = QtWidgets.QLineEdit("0.0", self)
-                tmp_arr[i, 1].setFixedWidth(50)
-                self.tab3.layout1.addWidget(tmp_arr[i, 1], i+1, 1, 1, 1)       
+                tmp_arr[i, 1].setMaximumWidth(50)
+                self.tab3.layout1.addWidget(tmp_arr[i, 1], i, 1, 1, 1)   
+                
         self.il['Line4'] = tmp_arr  # creates the Geometry Section of the dictionary
         tmp_arr = np.empty(shape=(len(self.il5info), 3), dtype=object)
-        self.tab3.layout1mod.addLayout(self.tab3.layout1)
+        self.tab3.group1.setLayout(self.tab3.layout1)
+        self.tab3.group2 = QGroupBox("Boundary Conditions")
+        self.tab3.group2grid = QGridLayout()
+        self.tab3.group2_1 = QGroupBox("Initial Point")
+        self.tab3.group2_2 = QGroupBox("Final Point")      
         
-        self.tab3.layout2mod = QVBoxLayout()
-        self.tab3.legend2 = QLabel("Boundary Conditions")
-        self.tab3.legend2.setFont(self.fontss)
-
-        self.tab3.layout2mod.addWidget(self.tab3.legend2)
-        self.tab3.legend3 = QLabel("LOS Point 0")
-        self.tab3.legend3.setFont(self.fontss)
-        self.tab3.layout2mod.addWidget(self.tab3.legend3)
         self.tab3.layout2 = QGridLayout()
         for i in range(len(self.il5info[0:3])):  # INPUT LINE 5
             tmp_arr[i, 0] = QtWidgets.QCheckBox(self.il5info[i], self)
             self.tab3.layout2.addWidget(tmp_arr[i, 0], i, 0)
-        self.tab3.layout2mod.addLayout(self.tab3.layout2)
-        self.tab3.legend4 = QLabel("Final LOS Point")
-        self.tab3.legend4.setFont(self.fontss)
-        self.tab3.layout2mod.addWidget(self.tab3.legend4)
+        self.tab3.group2_1.setLayout(self.tab3.layout2)
+        
         self.tab3.layout3 = QGridLayout()
         for i in range(3):  # INPUT LINE 5
             tmp_arr[i+3, 0] = QtWidgets.QCheckBox(self.il5info[i+3], self)
             self.tab3.layout3.addWidget(tmp_arr[i+3, 0], i, 0)
             if "(G)" in self.il5info[i+3]:
                 tmp_arr[i+3, 1] = QtWidgets.QLineEdit("0.0", self)
-                tmp_arr[i+3, 1].setFixedWidth(50)
+                tmp_arr[i+3, 1].setMaximumWidth(50)
                 tmp_arr[i+3, 2] = QtWidgets.QLineEdit("0.0", self)
-                tmp_arr[i+3, 2].setFixedWidth(50)
+                tmp_arr[i+3, 2].setMaximumWidth(50)
                 self.tab3.layout3.addWidget(tmp_arr[i+3, 1], i, 1, 1, 1)
-                self.tab3.layout3.addWidget(tmp_arr[i+3, 2], i, 2, 1, 1)    
-        self.tab3.layout2mod.addLayout(self.tab3.layout3)
-        
-        self.il['Line5'] = tmp_arr  # creates the Boundary Condition section of the dictionary
-        
-        self.tab3.masterlayout.addLayout(self.tab3.layout1mod, 0, 0)
-        self.tab3.masterlayout.addLayout(self.tab3.layout2mod, 0, 1)
+                self.tab3.layout3.addWidget(tmp_arr[i+3, 2], i, 2, 1, 1)  
+                
+        self.tab3.group2_2.setLayout(self.tab3.layout3)
+        self.tab3.group2grid.addWidget(self.tab3.group2_1, 0 , 0)
+        self.tab3.group2grid.addWidget(self.tab3.group2_2, 1 , 0)
+        self.tab3.group2.setLayout(self.tab3.group2grid)
+        self.il['Line5'] = tmp_arr  # creates the Boundary Condition section of the dictionary       
+        self.tab3.masterlayout.addWidget(self.tab3.group1, 0, 0)
+        self.tab3.masterlayout.addWidget(self.tab3.group2, 0, 1)
         self.tab3.setLayout(self.tab3.masterlayout)
         print("created Boundary/Geometry")
 
         # ---- Create fourth tab
         self.tab4.masterlayout = QVBoxLayout()
-        self.tab4.layout1 = QGridLayout()
-        self.tab4.legend1 = QLabel("Number of Regions")
-        self.tab4.legend1.setFont(self.fontss)
-        self.tab4.layout1.addWidget(self.tab4.legend1, 0, 0, QtCore.Qt.AlignCenter)
-        self.tab4.layout2 = QGridLayout()
-        self.regionbox = QtWidgets.QSpinBox(self)
+        self.tab4.layout1 = QFormLayout()
+        self.regionbox = QSpinBox(self)
         self.regionbox.setValue(4)
-        self.tab4.layout2.addWidget(self.regionbox, 0, 0, 1, 6)
         self.regionbox.valueChanged.connect(self.regionchange)
+        self.tab4.layout1.addRow(QLabel("Number of Regions"),self.regionbox)
 
         self.tab4.layout3 = QGridLayout()
-        self.tab4.legend2 = QLabel("Min Wavelength")
-        self.tab4.legend3 = QLabel("Max Wavelength")
+        self.tab4.legend2 = QLabel("Min Lambda")
+        self.tab4.legend3 = QLabel("Max Lambda")
         self.tab4.legend4 = QLabel("Grid Spacing")
         self.tab4.legend5 = QLabel("Delta")
         self.tab4.legend6 = QLabel("Range?")
@@ -691,7 +675,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             for j in range(6):
                 if j<2 or j == 3 or j == 5:
                     tmp_arr[i, j] = QtWidgets.QLineEdit("0.0", self)
-                    tmp_arr[i, j].setFixedWidth(100)
+                    tmp_arr[i, j].setMaximumWidth(100)
                     tmp_arr[i, j].setValidator(QtGui.QDoubleValidator())
                     self.tab4.layout4.addWidget(tmp_arr[i, j], i+1, j)
                 if j == 2:
@@ -704,7 +688,6 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
                     
         self.il['Line7'] = tmp_arr  # creates the Regions section of the dictionary
         self.tab4.masterlayout.addLayout(self.tab4.layout1)
-        self.tab4.masterlayout.addLayout(self.tab4.layout2)
         self.tab4.masterlayout.addLayout(self.tab4.layout3)
         self.tab4.masterlayout.addLayout(self.tab4.layout4)
         
@@ -739,7 +722,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             tmp_arr1[i, 0].setValidator(QtGui.QDoubleValidator())
             self.tab5.layout2.addWidget(tmp_arr1[i, 0], i+1, 0)
             tmp_arr1[i, 1] = QtWidgets.QComboBox()
-            tmp_arr1[i, 1].setFixedWidth(100)
+            tmp_arr1[i, 1].setMaximumWidth(100)
             tmp_arr1[i, 1].addItems(self.il7info[:])
             self.tab5.layout2.addWidget(tmp_arr1[i, 1], i+1, 1)
             for j in range(3):
@@ -748,7 +731,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
                 self.tab5.layout2.addWidget(tmp_arr1[i, j+2], i+1, j+2)
         for i in range(self.regionbox.value()):
             for j in range(5):
-                tmp_arr1[i, j].setFixedWidth(100)
+                tmp_arr1[i, j].setMaximumWidth(100)
 
         self.il['Line8'] = tmp_arr1   # creates the Scan portion of the dictionary. only required for shock tube
         self.tab5.masterlayout.addLayout(self.tab5.layout1)
@@ -860,8 +843,29 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         i2 = self.colchange2.currentIndex()
         sax.plot(self.plotfile[self.plotfile.dtype.names[i1]], self.plotfile[self.plotfile.dtype.names[i2]], '*-')
         self.canvas.draw()
-        
+
+    def checkSpecies(self):
+        name, __ = QFileDialog.getOpenFileName(self, "Open File", "", "All Files(*)")
+        if name:
+            m_input = {}
+            print("Checking Molecule List:", name)
+            input_text = open(name).readlines()
+            e = len(input_text)
+            j = 0
+            while j != e:
+              if "***" in input_text[j]:
+                  if "U" in input_text[j+1]:
+                      mols = input_text[j+2].split()[0:2]
+                      m_input.setdefault(mols[0],[])
+                      m_input[mols[0]].append(mols[1])                      
+              j+=1
+        return m_input
+              
+    
     def ReadLOS(self):  # OPENING LOS.DAT FILE TO READ COLUMN HEADERS
+        self.m = self.checkSpecies()
+        for key, value in self.m.items():
+            print ("have :",key, value)
         self.aband = ["bb", "bf", "ff"]
         self.n2band = ["1+", "2+", "BH2", "LBH", "BH1", "WJ", "CY"]
         self.o2band = ["SR"]
@@ -897,32 +901,23 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
                     tmp_arrb[i] = QtWidgets.QPushButton(self.speclist[i], self)
                     tmp_arrb[i].setCheckable(True)
                     self.tab2.layout3.addWidget(tmp_arrb[i], i+1, 0)
-
-                    if len(self.speclist[i]) == 1:
-                        for j in range(3):  # making specific bands for atoms(bf, bb, ff)
-                            tmp_arrcb[i, j] = QtWidgets.QCheckBox(self.aband[j])
-                            self.tab2.layout3.addWidget(tmp_arrcb[i, j], i+1, j*2+1)
-                    if "N2" in self.speclist[i] and len(self.speclist[i]) == 2:
-                        for j in range(len(self.n2band)):
-                            tmp_arrcb[i, j] = QtWidgets.QCheckBox(self.n2band[j])
-                            self.tab2.layout3.addWidget(tmp_arrcb[i, j], i+1, j*2+1)
-                    if "O2" in self.speclist[i] and len(self.speclist[i]) == 2:
-                        for j in range(len(self.o2band)):
-                            tmp_arrcb[i, j] = QtWidgets.QCheckBox(self.o2band[j])
-                            self.tab2.layout3.addWidget(tmp_arrcb[i, j], i+1, j*2+1)
-                    if "NO" in self.speclist[i] and len(self.speclist[i]) == 2:
-                        for j in range(len(self.noband)):
-                            tmp_arrcb[i, j] = QtWidgets.QCheckBox(self.noband[j])
-                            self.tab2.layout3.addWidget(tmp_arrcb[i, j], i+1, j*2+1)
-                    xcount += 1
+                    try:
+                        if self.m[str(self.speclist[i])] is not None and "+" not in self.speclist[i]:
+                            for j in range(len(self.m[str(self.speclist[i])])):
+                                tmp_arrcb[i, j] = QtWidgets.QCheckBox(self.m[str(self.speclist[i])][j])
+                                self.tab2.layout3.addWidget(tmp_arrcb[i, j], i+1, j*2+1)
+                        
+                    except:
+                        if len(self.speclist[i]) == 1:
+                            for j in range(3):  # making specific bands for atoms(bf, bb, ff)
+                                tmp_arrcb[i, j] = QtWidgets.QCheckBox(self.aband[j])
+                                self.tab2.layout3.addWidget(tmp_arrcb[i, j], i+1, j*2+1)
             self.il['Line6'] = tmp_arrb  # The press buttons for each species
             self.il['Line6CB'] = tmp_arrcb  # the check buttons for each species
+            
     def loschange(self):
         print("my value chaanged!")
-        count = self.losnumbox.value()  # tables want
-        clayout = int((self.tab4.layout4.count())/6)  # tables have(includes spinbox)
-        
-        print("count is: ", count, "clayout is: ", clayout)
+
     def regionchange(self):
         count = self.regionbox.value()  # tables want
         clayout = int((self.tab4.layout4.count())/6)  # tables have(includes spinbox)
@@ -943,12 +938,12 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             for j in range(6):
                 if j<2 or j == 3 or j == 5:
                     self.il['Line7'][count-1, j] = QtWidgets.QLineEdit("0.0", self)
-                    self.il['Line7'][count-1, j].setFixedWidth(100)
+                    self.il['Line7'][count-1, j].setMaximumWidth(100)
                     self.il['Line7'][count-1, j].setValidator(QtGui.QDoubleValidator())
                     self.tab4.layout4.addWidget(self.il['Line7'][count-1, j], count, j)
                 if j == 2:
                     self.il['Line7'][count-1, j] = QtWidgets.QComboBox()
-                    self.il['Line7'][count-1, j].setFixedWidth(100)
+                    self.il['Line7'][count-1, j].setMaximumWidth(100)
                     self.il['Line7'][count-1, j].addItems(self.il6info[2:4])
                     self.tab4.layout4.addWidget(self.il['Line7'][count-1, j], count, j)
                 if j == 4:
@@ -958,16 +953,16 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
 
             self.il['Line8'] = np.resize(self.il['Line8'], [count, 5])
             self.il['Line8'][count-1, 0] = QtWidgets.QLineEdit("0.0", self)
-            self.il['Line8'][count-1, 0].setFixedWidth(100)
+            self.il['Line8'][count-1, 0].setMaximumWidth(100)
             self.il['Line8'][count-1, 0].setValidator(QtGui.QDoubleValidator())
             self.tab5.layout2.addWidget(self.il['Line8'][count-1, 0], count, 0)
             self.il['Line8'][count-1, 1] = QtWidgets.QComboBox()
-            self.il['Line8'][count-1, 1].setFixedWidth(100)
+            self.il['Line8'][count-1, 1].setMaximumWidth(100)
             self.il['Line8'][count-1, 1].addItems(self.il7info[:])
             self.tab5.layout2.addWidget(self.il['Line8'][count-1, 1], count, 1)
             for j in range(3):
                 self.il['Line8'][count-1, j+2] = QtWidgets.QLineEdit("0.0", self)
-                self.il['Line8'][count-1, j+2].setFixedWidth(100)
+                self.il['Line8'][count-1, j+2].setMaximumWidth(100)
                 self.il['Line8'][count-1, j+2].setValidator(QtGui.QDoubleValidator())
                 self.tab5.layout2.addWidget(self.il['Line8'][count-1, j+2], count, j+2)
             self.tab5.setLayout(self.tab5.masterlayout)
@@ -992,8 +987,6 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             self.il['Line3'][1, 3].show()
         else:
             self.il['Line3'][1, 3].hide()
-                   
-        
 
 def main():
     app = QApplication(sys.argv)
