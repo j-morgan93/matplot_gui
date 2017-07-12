@@ -9,8 +9,8 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 
-sfile = "C:/Users/jmorga14/AnacondaProjects/matplot_gui-reading/simulated.out"
-efile = "C:/Users/jmorga14/AnacondaProjects/matplot_gui-reading/experimental.out"
+sfile = "C:/Users/jmorga14/AnacondaProjects/matplot_gui-reading/temp.out"
+efile = "C:/Users/jmorga14/AnacondaProjects/matplot_gui-reading/exp_temp.out"
 simfile =np.genfromtxt(sfile, comments='#', skip_header=3, names=True, unpack=True, autostrip=True)
 expfile = np.genfromtxt(efile, comments='#', skip_header=3, names=True, unpack=True, autostrip=True)
 # should replace "names" with the temperature values
@@ -43,12 +43,14 @@ def realguy(i):
     print(2700+i*10)
     return real_obj(i)
 
-x0=4
+x0 = 4
 
 sol = minimize(realguy,x0,method='Nelder-Mead',options={'disp': True, 'maxiter':100}, tol=1e-6)
 
 xnew = np.linspace(1,19,num=100)
 
 plt.plot(xp,deltas,'o',xnew,real_obj(xnew),'--')
+plt.xlabel("Case #")
+plt.ylabel('\Delta')
 plt.legend(['tabulated','interpolated'],loc='best')
 plt.show()
