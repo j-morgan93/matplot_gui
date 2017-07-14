@@ -4,13 +4,14 @@ Created on Sat Jun 24 10:03:22 2017
 
 @author: Jonathan Morgan
 """
-
+from subprocess import call
 import sys
 import re
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QWidget, QStackedWidget, QApplication,\
  QLineEdit, QCheckBox, QLabel, QAction, QMainWindow, QFileDialog, QGridLayout, QVBoxLayout,\
- QGroupBox, QFormLayout, QSpinBox
+ QGroupBox, QFormLayout, QSpinBox, QPushButton
+from PyQt5.QtCore import QProcess
 
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -184,22 +185,19 @@ class Window(QMainWindow):
         msgbox.exec_()
 
     def genLOSFile(self):
-        name = QFileDialog.getSaveFileName(self, "Save File", "", "All Files(*);;Input Files(*.dat)")
+        name = QFileDialog.getSaveFileName(self, "Write Out LOS File", "", "All Files(*);;Input Files(*.dat)")
         print("Writing LOS out to:", name[0])
         f = open(name[0], 'w')
         f.write("#15.0\n#\n\n")
-        f.write("n        x        ntot        Tt        ")
+        f.write("n        x        ntot        Tt")
+        sum_nrho = 0
         for i in range(0, self.content.los['SpecNum'].value()):
             ind = self.content.los['Species'][i, 0].currentIndex()
             f.write("        "+self.content.los['Species'][i, 0].itemText(ind))
-        count = 1   
-        for i in range(2*int(self.content.los['Fitting'][2,0].text())):
-            if self.content.los['SpecNum'].value() > 1:
-                for j in range(5):
-                    f.write("\n"+str(count)+"        "+str((count)*0.5)+"        "+str(3E+17)+"        "+str((i*float(self.content.los['Fitting'][0,0].text())
-                    -float(self.content.los['Fitting'][0,0].text())*float(self.content.los['Fitting'][2,0].text())+float(self.content.los['Temperature'].text())))+"        "+str(3E+17-j*.2*3E+17)
-                    +"        "+str(j*.2*3E+17))
-                    count += 1
+            sum_nrho += float(self.content.los['Species'][i, 1].text())
+        f.write("\n"+str(1)+"        "+str(0.0)+"        "+str(sum_nrho)+"        "+str(float(self.content.los['Temperature'].text())))
+        for i in range(0, self.content.los['SpecNum'].value()):
+            f.write("        "+self.content.los['Species'][i, 1].text())
         
     def saveFileDialog(self):  # MASTER WRITE CAPABILITY
         name = QFileDialog.getSaveFileName(self, "Save File", "", "All Files(*);;Input Files(*.inp)")
@@ -402,13 +400,13 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.toolbar.show()
 
         # some buttons for functionality
-        self.button = QtWidgets.QPushButton('ReadPlot')
+        self.button = QPushButton('ReadPlot')
         self.button.clicked.connect(self.readplot)
         self.colchange1 = QtWidgets.QComboBox()
         self.colchange1.currentIndexChanged.connect(self.newplot)  # make new plot function
         self.colchange2 = QtWidgets.QComboBox()
         self.colchange2.currentIndexChanged.connect(self.newplot)  # make new plot function
-        self.button2 = QtWidgets.QPushButton('ClearPlot')
+        self.button2 = QPushButton('ClearPlot')
         self.button2.clicked.connect(self.figure.clear)
 
         layout = QtWidgets.QVBoxLayout()
@@ -429,6 +427,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         formGroupBox1 = QGroupBox("Temperatures")
         layout1 = QtWidgets.QFormLayout()
         los_tmp[0, 0] =  QLineEdit("0.0", self)
+        los_tmp[0, 0].setValidator(QtGui.QDoubleValidator())
         
         layout1.addRow(QLabel("Translational:"), los_tmp[0, 0])
         
@@ -457,6 +456,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
                     layout2.addRow(QLabel("Species "+str(i+1)), los_tmp[i, j])
                 if j == 1:
                     los_tmp[i, j] = QtWidgets.QLineEdit("0.0", self)
+                    los_tmp[i, j].setValidator(QtGui.QDoubleValidator())
                     layout2.addRow(QLabel("Number Density "+str(i+1)), los_tmp[i, j])
         formGroupBox2.setLayout(layout2)
         self.los['Species'] = los_tmp
@@ -465,11 +465,15 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         layout3 = QFormLayout()
         los_tmp = np.empty(shape=(3, 1), dtype=object)
         for i in range(len(los_tmp)):
-            los_tmp[i] = QLineEdit("0.0", self)
-            
-        layout3.addRow(QLabel("Temperature (+/-K):"), los_tmp[0, 0])
-        layout3.addRow(QLabel("Number Density (+/-)E:"), los_tmp[1, 0])
-        layout3.addRow(QLabel("Number of Intervals :"), los_tmp[2, 0])
+            los_tmp[i, 0] = QLineEdit("0.0", self)
+            los_tmp[i, 0].setValidator(QtGui.QDoubleValidator())
+        
+        self.simplexbutton = QPushButton("Execute Order 66")
+       	self.simplexbutton.pressed.connect(self.simplex)
+        layout3.addRow(QLabel("Max Iter: "), los_tmp[0, 0])
+        layout3.addRow(QLabel("Max FuncEval:"), los_tmp[1, 0])
+        layout3.addRow(QLabel("Tolerance :"), los_tmp[2, 0])
+        layout3.addRow(QLabel("Start Optimization"),self.simplexbutton)
         self.los['Fitting'] = los_tmp
         
         formGroupBox3.setLayout(layout3)
@@ -481,6 +485,20 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         self.stack2.setLayout(self.stack2.masterlayout)
         del los_tmp
         
+    def simplex(self):
+        # self.simplexbutton.setEnabled(0)
+        self.simplexbutton.setText("Please Wait")
+        command = "ls"
+        process=QProcess(self)
+        process.finished.connect(self.reenableSimplex)
+        process.startDetached(command)
+        print("kerzappo!")
+        for i in range(len(self.los['Fitting'])):
+            print(self.los['Fitting'][i, 0].text())
+        
+    def reenableSimplex(self):
+        self.simplexbutton.setText("Start Optimization")        
+
     def stack3UI(self):  # THE NEQAIR MODEL INPUT CAPABILITY
     # TABS---------------------------------
         self.il2info = ["(I)ntensity.out", "Intensity_(S)canned.out",
@@ -573,7 +591,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
         
         # ---- Create second tab        
         self.tab2.layout3 = QGridLayout()
-        self.losopen = QtWidgets.QPushButton("Read LOS")
+        self.losopen = QPushButton("Read LOS")
         self.losopen.clicked.connect(self.ReadLOS)  # define the button's functionality
         self.tab2.layout3.addWidget(self.losopen, 0, 0)
         self.tab2.setLayout(self.tab2.layout3)
@@ -898,7 +916,7 @@ class Widgettown(QWidget):  # WHERE ALL OF THE FUNCTIONALITY IS LOCATED
             tmp_arrb = [None]*len(self.speclist)
             tmp_arrcb = np.empty(shape=(xcount, len(self.n2band)), dtype=object)
             for i in range(len(self.speclist)):
-                    tmp_arrb[i] = QtWidgets.QPushButton(self.speclist[i], self)
+                    tmp_arrb[i] = QPushButton(self.speclist[i], self)
                     tmp_arrb[i].setCheckable(True)
                     self.tab2.layout3.addWidget(tmp_arrb[i], i+1, 0)
                     try:
